@@ -55,10 +55,12 @@ public class Console : MonoBehaviour
 	private List<string> history;
 	private int historyIndex;
 
+	[SerializeField]
 	private bool _enabled;
-	public bool isEnabled { get { return _enabled; } }
+	public bool getEnabled() { return _enabled; }
 	public void setEnabled(bool enabled)
 	{
+		_enabled = enabled;
 		if (!_enabled)
 		{
 			input.text = "";
@@ -121,7 +123,7 @@ public class Console : MonoBehaviour
 
 	public void Update()
 	{
-		if (!isEnabled)
+		if (!_enabled)
 			return;
 
 		if (!isFocused && (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.DownArrow) || Input.GetKeyDown (KeyCode.UpArrow)))
@@ -150,7 +152,7 @@ public class Console : MonoBehaviour
 	// Invoked when the user presses enter and the console is active
 	private void inputEntered()
 	{
-		if (!isEnabled || input.text == "")
+		if (!_enabled || input.text == "")
 			return;
 		
 		//use the text from input to execute a command
@@ -160,7 +162,7 @@ public class Console : MonoBehaviour
 	// Execute a file of prepared commands, treating each line as an indiv. command
 	public bool executeFile(string fileName)
 	{
-		return true; //TODO lua file execution
+		return true; //TODO file execution
 	}
 
 	// Attempt to execute a command. Fills output with the result of a successful command

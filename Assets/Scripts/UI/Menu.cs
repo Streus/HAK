@@ -13,7 +13,8 @@ public class Menu : MonoBehaviour
 		{
 			animator.SetBool("IsOpen", value);
 			canvasGroup.blocksRaycasts = canvasGroup.interactable = value;
-			OnFocusChanged (value);
+			if (changedFocus != null)
+				changedFocus (value);
 		}
 	}
 
@@ -29,9 +30,4 @@ public class Menu : MonoBehaviour
 
 	public delegate void FocusChanged(bool inFocus);
 	public event FocusChanged changedFocus;
-	public void OnFocusChanged(bool inFocus)
-	{
-		if (changedFocus != null)
-			changedFocus (inFocus);
-	}
 }
