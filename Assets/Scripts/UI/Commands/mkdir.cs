@@ -18,7 +18,6 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			string currentPath = GameManager.currentPath;
 			File currentFile = FileSystem.getFile (GameManager.currentPath);
 			string filename = args [1];
 
