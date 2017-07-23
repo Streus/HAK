@@ -18,18 +18,21 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			string filename = args [1];
-			//File currentFile = FileSystem.getFile (GameManager.currentPath);
 			string currentPath = GameManager.currentPath;
-
+			string filename = args [1];
 			File newFile = FileSystem.getFile (currentPath + "/" + filename);
-			Console.log.println ("Trying to change to directory " + currentPath + filename + ". Status=" + newFile);
-			if (newFile != null) {
-				// This forces a simplification of paths, so things like "/test/../test/.." get turned into "/".
-				GameManager.currentPath = FileSystem.getFile(currentPath + "/" + filename).getPath();
+
+			if (newFile == null) {
+				throw new ExecutionException ("Directory \"" + filename + "\" does not exist.");
 			}
 
-			return "";
+			if (!newFile.isDirectory) {
+				throw new ExecutionException ("Can't change directory into a non-directory file.");
+			}
+
+			// This forces a simplification of paths, so things like "/test/../test/.." get turned into "/".
+			GameManager.currentPath = newFile.getPath ();
+			return "Current directory is now \"" + GameManager.currentPath + "\".";
 		}
 	}
 }

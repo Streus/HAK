@@ -19,25 +19,32 @@ namespace Commands
 		public override string execute (params string[] args)
 		{
 			File currentFile = FileSystem.getFile (GameManager.currentPath);
-			if (currentFile.isDirectory) {
-				List<File> files = currentFile.getFiles ();
-				string toReturn = "";
-				if (files.Count == 0) {
-					Console.log.println ("No files found.");
-				} else {
-					for (int i = 0; i < files.Count; i++) {
-						// Possibly display in a different color
-						if (files [i].isDirectory) {
-							toReturn += files [i].getFullName () + "/\n";
-						} else {
-							toReturn += files [i].getFullName () + "/\n";
-						}
-					}
-					Console.log.println (toReturn);
-				}
-				return "";
+			if (!currentFile.isDirectory) {
+				throw new ExecutionException("Invalid state: Current path is not a directory.");
 			}
-			return "[Error] Current file is not a directory. Somehow?";
+
+			List<File> files = currentFile.getFiles ();
+			if (files.Count == 0) {
+				return "No files found.";
+			} else {
+				string toReturn = "";
+				if (files.Count > 0) {
+					toReturn = files [0].getFullName ();
+					if (files [0].isDirectory) {
+						toReturn += "/";
+					}
+				}
+
+				for (int i = 1; i < files.Count; i++) {
+					toReturn += "\n" + files [i].getFullName ();
+
+					// Possibly display in a different color
+					if (files [i].isDirectory) {
+						toReturn += "/";	
+					}
+				}
+				return toReturn;
+			}
 		}
 	}
 }

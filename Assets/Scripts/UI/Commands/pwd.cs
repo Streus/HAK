@@ -20,11 +20,11 @@ namespace Commands
 		{
 			string currentPath = GameManager.currentPath;
 			if (FileSystem.getFile (currentPath) != null && FileSystem.getFile (currentPath).isDirectory) {
-				Console.log.println (currentPath + "/");
+				return currentPath + "/";
 			} else {
-				Console.log.println (currentPath);
+				throw new ExecutionException ("Detected invalid state: current directory is not a directory");
+				//Console.log.println (currentPath);
 			}
-			return "";
 		}
 	}
 }

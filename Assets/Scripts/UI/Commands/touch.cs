@@ -18,24 +18,24 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			string filename = args [1];
+			//string currentPath = GameManager.currentPath;
 			File currentFile = FileSystem.getFile (GameManager.currentPath);
-			string currentPath = GameManager.currentPath;
+			string filename = args [1];
 
-			if (currentFile.isDirectory) {
-				if (currentFile.containsFile (currentPath + "/" + filename)) {
-					return "";
-				} else {
-					try {
-						FileSystem.createFile(filename);
-						Console.log.println("Created new file \"" + filename + "\".");
-					} catch (InvalidFileException e) {
-						Console.log.println ("Could not create file. Reason: " + e.Message, Console.LogTag.error);
-					}
-					return "";
-				}
+			if (!currentFile.isDirectory) {
+				throw new ExecutionException("Invalid state: Current path is not a directory.");
 			}
-			return "[Error] Current file is not a directory. Somehow?";
+
+			if (filename == null || (filename.GetType() != typeof(string))) {
+				throw new ExecutionException ("Invalid argument: filename must be a string.");
+			}
+				
+			try {
+				FileSystem.createFile(filename, currentFile);
+				return "Created new file \"" + filename + "\".";
+			} catch (InvalidFileException e) {
+				throw new ExecutionException("Could not create file. Reason: " + e.Message);
+			}
 		}
 	}
 }
