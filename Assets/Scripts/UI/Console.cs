@@ -44,11 +44,21 @@ public class Console : MonoBehaviour
 	public int linesMax;
 
 	// A list of all available commands
-	private List<Command> commands;
+	private Dictionary<string, Command> commands;
+
+	public Command getCommand(string invocaton)
+	{
+		Command c = null;
+		commands.TryGetValue (invocaton, out c);
+		return c;
+	}
 
 	public Command[] getCommandList()
 	{
-		return commands.ToArray ();
+		List<Command> cs = new List<Command> ();
+		foreach (Command c in commands.Values)
+			cs.Add (c);
+		return cs.ToArray ();
 	}
 
 	// Every individual 
@@ -83,11 +93,13 @@ public class Console : MonoBehaviour
 			log = this;
 			DontDestroyOnLoad (transform.root.gameObject);
 
-			commands = new List<Command> ();
+			commands = new Dictionary<string, Command> ();
 			buildCommandList ();
 
 			history = new List<string> ();
 			historyIndex = -1;
+
+			new CSEREnvironment (); //DEBUG
 		}
 		else
 			Destroy (transform.root.gameObject);
@@ -108,7 +120,7 @@ public class Console : MonoBehaviour
 				Command c = (Command)assembly.CreateInstance ("Commands." + rawClass);
 				if (c == null)
 					Debug.LogError ("Non-Command file in Commands folder."); //DEBUG
-				commands.Add (c);
+				commands.Add(c.getInvocation(), c);
 			}
 		}
 	}
@@ -156,91 +168,72 @@ public class Console : MonoBehaviour
 			return;
 		
 		//use the text from input to execute a command
-		execute(input.text);
+		string output = "";
+		bool success = execute(input.text, out output);
+		LogTag outTag = !success ? LogTag.error : LogTag.command_out;
+		if (output != "")
+			println (output, outTag);
 	}
 
 	// Execute a file of prepared commands, treating each line as an indiv. command
 	public bool executeFile(string fileName)
 	{
-		return true; //TODO file execution
+		string[] instructions;
+
+		try
+		{
+			instructions = System.IO.File.ReadAllLines (fileName);
+		}
+		#pragma warning disable 0168
+		catch(IOException ioe)
+		#pragma warning restore 0168
+		{
+			println ("Failed to load " + fileName + ".", LogTag.error);
+			return false;
+		}
+
+		new CSEREnvironment ().execute (instructions);
+
+		return true;
 	}
 
 	// Attempt to execute a command. Fills output with the result of a successful command
-	public bool execute(string command)
+	public bool execute(string command, out string output)
 	{
-		string commOut = "";
-		bool success = false;
+		bool success = true;
 
 		//parse input
-		string[] args = parseLine(command);
+		string[] args = CSEREnvironment.parseLine(command);
 		args [0] = args [0].ToLower ();
 
-		foreach (Command c in commands)
+		Command c = null;
+		if (commands.TryGetValue (args [0], out c))
 		{
-			if(c.getInvocation().Equals(args[0]))
+			try
 			{
-				try
-				{
-					commOut = c.execute (args);
-				}
-				catch(Command.ExecutionException ee)
-				{
-					println (ee.Message, LogTag.error);
-				}
-				#pragma warning disable 0168
-				catch(System.IndexOutOfRangeException ioore)
-				#pragma warning restore 0168
-				{
-					println ("Provided too few arguments.\n" + c.getHelp(), LogTag.error);
-				}
-
-				if (commOut != "")
-					println (commOut, LogTag.command_out);
-
-				success = true;
+				output = c.execute (args);
+			}
+			catch (Command.ExecutionException ee)
+			{
+				output = ee.Message;
+				success = false;
+			}
+			#pragma warning disable 0168
+			catch (System.IndexOutOfRangeException ioore)
+			#pragma warning restore 0168
+			{
+				output = "Provided too few arguments.\n" + c.getHelp ();
+				success = false;
 			}
 		}
-		if(!success)
-			println ("Command not found.  Try \"help\" for a list of commands", LogTag.error);
+		else
+		{
+			output = "Command \"" + args[0] + "\" not found.  Try \"help\" for a list of commands";
+			success = false;
+		}
 		history.Insert (0, input.text);
 
 		return success;
-	}
-
-	// Parse an individual input line and return an array of args
-	private string[] parseLine(string line)
-	{
-		List<string> argsList = new List<string> ();
-		string mergeString = "";
-		bool merging = false;
-
-		for (int i = 0; i < line.Length; i++)
-		{
-			if (line [i] == '\"') //start or end space-ignoring group
-			{
-				merging = !merging;
-				if (!merging)
-				{
-					argsList.Add (mergeString);
-					mergeString = "";
-				}
-			}
-			else if (line [i] == ' ' && !merging) //end of a regular term
-			{
-				if(mergeString != "")
-					argsList.Add (mergeString);
-				mergeString = "";
-			}
-			else //add any other character to the mergeString
-				mergeString += line [i];
-		}
-
-		//if the merge string is not empty, add it the the args list
-		if(mergeString != "")
-			argsList.Add (mergeString);
-
-		//return the parsed result
-		return argsList.ToArray ();
 	}
 
 	// Print a message to the console
