@@ -170,7 +170,7 @@ public class Console : MonoBehaviour
 		//use the text from input to execute a command
 		string output = "";
 		bool success = execute(input.text, out output);
-		LogTag outTag = !success ? LogTag.error : LogTag.command_out;
+		LogTag outTag = !success ? LogTag.error : LogTag.buildConOut();
 		if (output != "")
 			println (output, outTag);
 	}
@@ -251,7 +251,7 @@ public class Console : MonoBehaviour
 	}
 	public void print(string message, LogTag tag)
 	{
-		output.text += tags [(int)tag] + " " + message;
+		output.text += tag.getFullTag() + " " + message;
 
 		if (output.cachedTextGenerator.lineCount > linesMax)
 		{
@@ -269,8 +269,41 @@ public class Console : MonoBehaviour
 	/* Inner Classes */
 
 	// Used to tag output with appending strings and colors
-	public enum LogTag
+	public struct LogTag
 	{
-		none, error, warning, info, command_out
+		/* Basic pre-defined tags */
+		public static readonly LogTag none = new LogTag ("", Color.white);
+		public static readonly LogTag error = new LogTag ("[ERR]", Color.red);
+		public static readonly LogTag warning = new LogTag ("[WARN]", Color.yellow);
+		public static readonly LogTag info = new LogTag ("[INFO]", Color.green);
+
+		/* Static Methods */
+		public static LogTag buildConOut()
+		{
+			return new LogTag (GameManager.currentPath, Color.cyan);
+		}
+
+		/* Instance Vars */
+		private string tagValue;
+		private Color tagColor;
+
+		public LogTag(string value, Color color)
+		{
+			tagValue = value;
+			tagColor = color;
+		}
+
+		public string getFullTag()
+		{
+			if (tagValue == "")
+				return tagValue;
+			string colorValue = "<color=#";
+			Vector4 colVals = (Vector4)tagColor;
+			colorValue += ((int)(255f * colVals.x)).ToString ("x2");
+			colorValue += ((int)(255f * colVals.y)).ToString ("x2");
+			colorValue += ((int)(255f * colVals.z)).ToString ("x2");
+			colorValue += ((int)(255f * colVals.w)).ToString ("x2");
+			return colorValue + "><b>" + tagValue + "</b></color>";
+		}
 	}
 }
