@@ -12,16 +12,6 @@ public class Console : MonoBehaviour
 
 	private static Assembly assembly = Assembly.GetExecutingAssembly();
 
-	// Tags that are appended to print calls
-	private static string[] tags = new string[]
-	{
-		"",
-		"<color=#ff1111ff><b>[ERROR]</b></color>", //red
-		"<color=#ffff11ff><b>[WARN]</b></color>", //yellow
-		"<color=#11ffffff><b>[INFO]</b></color>", //cyan
-		"<color=#11ff11ff><b>[OUT]</b></color>" //green
-	};
-
 	/* Instance Vars */
 
 	// The input line for the Console
@@ -59,6 +49,11 @@ public class Console : MonoBehaviour
 		foreach (Command c in commands.Values)
 			cs.Add (c);
 		return cs.ToArray ();
+	}
+
+	public string[] getHistory()
+	{
+		return history.ToArray ();
 	}
 
 	// Every individual 
@@ -280,7 +275,7 @@ public class Console : MonoBehaviour
 		/* Static Methods */
 		public static LogTag buildConOut()
 		{
-			return new LogTag (GameManager.currentPath, Color.cyan);
+			return new LogTag (GameManager.currentPath + " $", Color.cyan);
 		}
 
 		/* Instance Vars */
