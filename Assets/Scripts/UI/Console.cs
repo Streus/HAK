@@ -195,6 +195,8 @@ public class Console : MonoBehaviour
 	// Attempt to execute a command. Fills output with the result of a successful command
 	public bool execute(string command, out string output)
 	{
+		history.Insert (0, input.text);
+
 		bool success = true;
 
 		//parse input
@@ -226,7 +228,6 @@ public class Console : MonoBehaviour
 			output = "Command \"" + args[0] + "\" not found.  Try \"help\" for a list of commands";
 			success = false;
 		}
-		history.Insert (0, input.text);
 
 		return success;
 	}
