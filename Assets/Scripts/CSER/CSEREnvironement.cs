@@ -145,6 +145,7 @@ public class CSEREnvironment
 							#pragma warning restore 0168
 							{
 								Console.log.println ("Malformed For statement on line " + currLine + ".", Console.LogTag.error);
+								e.ToString (); // Supress unused warnings
 								return false;
 							}
 						}

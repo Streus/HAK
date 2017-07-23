@@ -139,6 +139,7 @@ public class FileSystemTest {
 		// Can we make a directory a child of a normal file?
 		Assert.Throws (typeof(InvalidFileException), delegate {
 			File file2 = FileSystem.createFile ("hello2.txt", file);
+			file2.getPath();
 		});
 	}
 
@@ -150,11 +151,14 @@ public class FileSystemTest {
 		Assert.Throws (typeof(InvalidFileException), delegate {
 			File f1 = FileSystem.createFile("test1.txt");
 			File f2 = FileSystem.createFile("test1.txt");
+			f1.getPath();
+			f2.getPath();
 		});
 
 		// Can we create directories that don't exist?
 		Assert.Throws (typeof(InvalidFileException), delegate {
 			File f = FileSystem.createFile ("test/testing.txt");
+			f.getPath();
 		});
 	}
 
