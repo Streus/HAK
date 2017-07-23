@@ -140,7 +140,9 @@ public class CSEREnvironment
 								step = int.Parse (indexArgs [1]);
 								end = int.Parse (indexArgs [2]);
 							}
-							catch(Exception e) 
+							#pragma warning disable 0168
+							catch(Exception e)
+							#pragma warning restore 0168
 							{
 								Console.log.println ("Malformed For statement on line " + currLine + ".", Console.LogTag.error);
 								e.ToString (); // Supress unused warnings
@@ -191,14 +193,16 @@ public class CSEREnvironment
 							closeScope();
 						}
 					}
-					catch(InvalidCastException ice) { ice.ToString (); /* Suppress warnings */ }
+					#pragma warning disable 0168
+					catch(InvalidCastException ice) { }
+					#pragma warning restore 0168
 				}
 			}
 			else
 			{
 				string output = "";
 				bool success = Console.log.execute(instructions[currLine].TrimStart('\t', ' '), out output);
-				Console.LogTag outTag = !success ? Console.LogTag.error : Console.LogTag.command_out;
+				Console.LogTag outTag = !success ? Console.LogTag.error : Console.LogTag.buildConOut ();
 				if (output != "")
 					Console.log.println (output, outTag);
 			}

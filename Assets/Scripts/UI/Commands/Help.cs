@@ -20,10 +20,11 @@ namespace Commands
 		public override string execute (params string[] args)
 		{
 			Command[] commands = Console.log.getCommandList ();
+			string retString = "[HELP]\n";
 			if (args.Length == 1)
 			{
 				foreach (Command c in commands)
-					Console.log.println (c.getInvocation() + " | " + c.getHelp (), Console.LogTag.command_out);
+					retString += c.getInvocation () + " | " + c.getHelp () + "\n";
 			}
 			else
 			{
@@ -31,13 +32,12 @@ namespace Commands
 				{
 					if (c.getInvocation () == args [1]) 
 					{
-						Console.log.println (c.getInvocation() + " | " + c.getHelp (), Console.LogTag.command_out);
-						return "";
+						return c.getInvocation () + " | " + c.getHelp () + "\n";
 					}
 				}
 				throw new ExecutionException ("Unknown command: " + args [1]);
 			}
-			return "";
+			return retString;
 		}
 	}
 }
