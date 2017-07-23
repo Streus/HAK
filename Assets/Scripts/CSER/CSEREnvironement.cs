@@ -143,6 +143,7 @@ public class CSEREnvironment
 							catch(Exception e) 
 							{
 								Console.log.println ("Malformed For statement on line " + currLine + ".", Console.LogTag.error);
+								e.ToString (); // Supress unused warnings
 								return false;
 							}
 						}
@@ -190,7 +191,7 @@ public class CSEREnvironment
 							closeScope();
 						}
 					}
-					catch(InvalidCastException ice) { }
+					catch(InvalidCastException ice) { ice.ToString (); /* Suppress warnings */ }
 				}
 			}
 			else
