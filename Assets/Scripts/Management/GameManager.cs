@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
+	public static string currentPath = "";
+
 	// Use this for initialization
 	void Start () {
 		
