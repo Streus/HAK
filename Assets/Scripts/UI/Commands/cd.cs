@@ -32,7 +32,7 @@ namespace Commands
 
 			// This forces a simplification of paths, so things like "/test/../test/.." get turned into "/".
 			GameManager.currentPath = newFile.getPath ();
-			return "Current directory is now \"" + GameManager.currentPath + "\".";
+			return "Current directory is now \"" + GameManager.currentPath + "/\".";
 		}
 	}
 }
