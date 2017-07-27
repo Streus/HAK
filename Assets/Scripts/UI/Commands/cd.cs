@@ -20,7 +20,7 @@ namespace Commands
 		{
 			string currentPath = GameManager.currentPath;
 			string filename = args [1];
-			File newFile = FileSystem.getFile (currentPath + "/" + filename);
+			File newFile = GameManager.currentFileSystem.getFile (currentPath + "/" + filename);
 
 			if (newFile == null) {
 				throw new ExecutionException ("Directory \"" + filename + "\" does not exist.");

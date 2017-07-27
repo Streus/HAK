@@ -18,7 +18,7 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			File currentFile = FileSystem.getFile (GameManager.currentPath);
+			File currentFile = GameManager.currentFileSystem.getFile (GameManager.currentPath);
 			string filename = args [1];
 
 			if (!currentFile.isDirectory) {
@@ -30,7 +30,7 @@ namespace Commands
 			}
 
 			try {
-				FileSystem.createDirectory(filename, currentFile);
+				GameManager.currentFileSystem.createDirectory(filename, currentFile);
 				return "Created new directory \"" + filename + "\".";
 			} catch (InvalidFileException e) {
 				throw new ExecutionException("Could not create directory. Reason: " + e.Message);

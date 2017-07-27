@@ -12,18 +12,14 @@ public class FileSystem : MonoBehaviour {
 	private static string[] validFileExtensions = new string[] {
 		"txt", "src"
 	};
-	public static readonly File root = new File (null, "", "" , true);
+	//public static readonly File root = new File (null, "", "" , true);
+	public readonly File root;
 
-	// Use this for initialization
-	void Start () {
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
+	public FileSystem() {
+		root = new File (null, "", "", true);
 	}
 
-	public static File createFile(string name, File dir=null) {
+	public File createFile(string name, File dir=null) {
 		if (!isValidFullFileName (name)) {
 			throw new InvalidFileException ("Invalid file name.");
 		}
@@ -46,7 +42,7 @@ public class FileSystem : MonoBehaviour {
 		}
 	}
 
-	public static File createFile(string name, string ext, File dir=null) {
+	public File createFile(string name, string ext, File dir=null) {
 		if (!isValidFileName (name) || !isValidExtension(ext)) {
 			throw new InvalidFileException ("Invalid file name.");
 		}
@@ -69,7 +65,7 @@ public class FileSystem : MonoBehaviour {
 		}
 	}
 
-	public static File createDirectory(string name, File dir=null) {
+	public File createDirectory(string name, File dir=null) {
 		if (!isValidFileName (name)) {
 			throw new InvalidFileException ("Invalid file name.");
 		}
@@ -95,7 +91,7 @@ public class FileSystem : MonoBehaviour {
 	/**
 	 * Moves a file from one directory to a new one.
 	 */
-	public static void moveFile(File toMove, File newDir) {
+	public void moveFile(File toMove, File newDir) {
 		if (toMove == null || newDir == null) {
 			throw new InvalidFileException ("Input or output files are invalid.");
 		}
@@ -115,7 +111,7 @@ public class FileSystem : MonoBehaviour {
 		toMove.moveTo (newDir);
 	}
 
-	public static File getFile(string path) {
+	public File getFile(string path) {
 		if (path == null) {
 			return null;
 		}

@@ -19,7 +19,7 @@ namespace Commands
 		public override string execute (params string[] args)
 		{
 			//string currentPath = GameManager.currentPath;
-			File currentFile = FileSystem.getFile (GameManager.currentPath);
+			File currentFile = GameManager.currentFileSystem.getFile (GameManager.currentPath);
 			string filename = args [1];
 
 			if (!currentFile.isDirectory) {
@@ -31,7 +31,7 @@ namespace Commands
 			}
 				
 			try {
-				FileSystem.createFile(filename, currentFile);
+				GameManager.currentFileSystem.createFile(filename, currentFile);
 				return "Created new file \"" + filename + "\".";
 			} catch (InvalidFileException e) {
 				throw new ExecutionException("Could not create file. Reason: " + e.Message);
