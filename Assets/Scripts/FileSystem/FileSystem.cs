@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Text.RegularExpressions;
 using System;
 
-public class FileSystem : MonoBehaviour {
+public class FileSystem {
 
 	// The only valid filenames are "([0-9][a-z][A-Z]-_)*"
 	private static Regex validNameRegex = new Regex (@"(\w?-?_?)+");
@@ -13,28 +13,24 @@ public class FileSystem : MonoBehaviour {
 		"txt", "src"
 	};
 	//public static readonly File root = new File (null, "", "" , true);
-	public readonly File root;
+	public readonly Directory root;
 
 	public FileSystem() {
-		root = new File (null, "", "", true);
+		root = new Directory (null, "");
 	}
 
-	public File createFile(string name, File dir=null) {
+	public EditableFile createFile(string name, Directory dir=null) {
 		if (!isValidFullFileName (name)) {
 			throw new InvalidFileException ("Invalid file name.");
 		}
 
-		if (dir != null && !dir.isDirectory) {
-			throw new InvalidFileException ("Can't create a child of a non-directory file.");
-		}
-
 		string newPath = dir == null ? name : dir.getPath () + "/" + name;
 		if (getFile (newPath) == null) {
 			if (dir == null) {
-				File file = new File (root, name, false);
+				EditableFile file = new EditableFile (root, name);
 				return file;
 			} else {
-				File file = new File (dir, name, false);
+				EditableFile file = new EditableFile (dir, name);
 				return file;
 			}
 		} else {
@@ -42,22 +38,18 @@ public class FileSystem : MonoBehaviour {
 		}
 	}
 
-	public File createFile(string name, string ext, File dir=null) {
+	public EditableFile createFile(string name, string ext, Directory dir=null) {
 		if (!isValidFileName (name) || !isValidExtension(ext)) {
 			throw new InvalidFileException ("Invalid file name.");
 		}
 
-		if (dir != null && !dir.isDirectory) {
-			throw new InvalidFileException ("Can't create a child of a non-directory file.");
-		}
-
 		string newPath = dir == null ? name : dir.getPath () + "/" + name;
 		if (getFile (newPath) == null) {
 			if (dir == null) {
-				File file = new File (root, name, ext, false);
+				EditableFile file = new EditableFile (root, name, ext);
 				return file;
 			} else {
-				File file = new File (dir, name, ext, false);
+				EditableFile file = new EditableFile (dir, name, ext);
 				return file;
 			}
 		} else {
@@ -65,22 +57,18 @@ public class FileSystem : MonoBehaviour {
 		}
 	}
 
-	public File createDirectory(string name, File dir=null) {
+	public Directory createDirectory(string name, Directory dir=null) {
 		if (!isValidFileName (name)) {
 			throw new InvalidFileException ("Invalid file name.");
-		}
-
-		if (dir != null && !dir.isDirectory) {
-			throw new InvalidFileException ("Can't create a child of a non-directory file.");
 		}
 
 		string newPath = dir == null ? name : dir.getPath () + "/" + name;
 		if (getFile (newPath) == null) {
 			if (dir == null) {
-				File file = new File (root, name, true);
+				Directory file = new Directory (root, name);
 				return file;
 			} else {
-				File file = new File (dir, name, true);
+				Directory file = new Directory (dir, name);
 				return file;
 			}
 		} else {
@@ -91,12 +79,9 @@ public class FileSystem : MonoBehaviour {
 	/**
 	 * Moves a file from one directory to a new one.
 	 */
-	public void moveFile(File toMove, File newDir) {
+	public void moveFile(File toMove, Directory newDir) {
 		if (toMove == null || newDir == null) {
 			throw new InvalidFileException ("Input or output files are invalid.");
-		}
-		if (!newDir.isDirectory) {
-			throw new InvalidFileException ("Output file is not a directory.");
 		}
 		if (newDir.getPath () == null) {
 			throw new InvalidFileException ("Output file has an invalid path. (bug in path creation?)");
@@ -119,17 +104,18 @@ public class FileSystem : MonoBehaviour {
 		string[] pathElements = path.Split( new char[]{'/'} );
 		File currentFile = root;
 		for (int i = 0; i < pathElements.Length; i++) {
-			if (currentFile.isDirectory) {
+			if (currentFile is Directory) {
+				Directory currentDir = currentFile as Directory;
 				if (pathElements [i].Equals ("..")) {
-					if (currentFile == root) {
+					if (currentDir == root) {
 						continue;
 					} else {
-						currentFile = currentFile.getParent ();
+						currentFile = currentDir.getParent ();
 					}
 				} else if (pathElements [i].Equals (".") || pathElements[i].Equals("")) {
 					continue;
-				} else if (currentFile.containsFile (pathElements [i])) {
-					currentFile = currentFile.getFile (pathElements [i]);
+				} else if (currentDir.containsFile (pathElements [i])) {
+					currentFile = currentDir.getFile (pathElements [i]);
 				} else {
 					// We could not find a file, so fail
 					return null;

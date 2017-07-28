@@ -26,9 +26,11 @@ namespace Commands
 				throw new ExecutionException ("Directory \"" + filename + "\" does not exist.");
 			}
 
+			/*
 			if (!newFile.isDirectory) {
 				throw new ExecutionException ("Can't change directory into a non-directory file.");
 			}
+			*/
 
 			// This forces a simplification of paths, so things like "/test/../test/.." get turned into "/".
 			GameManager.currentPath = newFile.getPath ();

@@ -22,195 +22,68 @@ using System;
 public class File {
 
 	// The name of this file/directory.
-	private string name;
+	protected string name;
 
-	// File-only. The extension of this file.
-	private string extension;
-
-	// File-only. The inner contents of this file.
-	private string contents = null;
-
-	// Get-only; set on instantiation.
-	public bool isDirectory {
-		private set;
-		get;
-	}
-	// Directory-only. Null for files; set on instantiation for directories.
-	private List<File> files = null;
+	// Non-directory-only. The extension of this file.
+	private string extension = null;
 
 	// The absolute path of this file.
-	private string path;
+	protected string path;
 
 	// The parent file of this file.
-	private File parent;
+	protected Directory parent;
+
+	// Allows for subclasses to figure out their own constructors
+	protected File() {}
 
 	/**
 	 * Create a new File in the provided directory.
 	 */
-	public File(File parent, string name, bool isDir) {
-		if (isDir) {
-			Setup (parent, name, "", true);
-		} else {
-			if (name.Contains (".")) {
-				// Create a new file with sliced name and extension
-				Setup(
-					parent,
-					name.Substring(0, name.IndexOf(".")),
-					name.Substring (name.LastIndexOf (".") + 1),
-					false);
-			}
+	public File(Directory parent, string name) {
+		if (name.Contains (".")) {
+			// Create a new file with sliced name and extension
+			Setup(
+				parent,
+				name.Substring(0, name.IndexOf(".")),
+				name.Substring (name.LastIndexOf (".") + 1));
 		}
+		//Should this throw an exception otherwise?
 	}
 
-	public File(File parent, string name, string ext, bool isDir) {
-		Setup (parent, name, ext, isDir);
+	public File(Directory parent, string name, string ext) {
+		Setup (parent, name, ext);
 	}
 
-	private void Setup(File parent, string name, string ext, bool isDir) {
+	private void Setup(Directory parent, string name, string ext) {
 		this.name = name;
-		this.isDirectory = isDir;
 		this.parent = parent;
-		if (isDir) {
-			this.path = parent == null ? "" : parent.path + "/" + name;
-			this.extension = null;
-			this.contents = null;
-			this.files = new List<File> ();
-		} else {
-			this.path = parent == null ? "" : parent.path + "/" + name + "." + ext;
-			this.extension = ext;
-			this.contents = "";
-			this.files = null;
-		}
+		this.path = parent == null ? "" : parent.path + "/" + name + "." + ext;
+		this.extension = ext;
 
 		if (parent != null) {
 			parent.addFile (this);
 		}
 	}
 
-	public string getContents() {
-		if (isDirectory) {
-			throw new InvalidOperationException ("Can't access the contents of a directory.");
-		} else {
-			return contents;
-		}
-	}
-
-	public void setContents(string contents) {
-		if (isDirectory) {
-			throw new InvalidOperationException ("Can't set the contents of a directory.");
-		} else {
-			this.contents = contents;
-		}
-	}
-
-	public List<File> getFiles() {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot list children of a file, only directories.");
-		} else {
-			return files;
-		}
-	}
-
-	public int getNumFiles() {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot list children of a file, only directories.");
-		} else {
-			return files.Count;
-		}
-	}
-
-	public void addFile(File file) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot add children to a file, only directories.");
-		} else if (file == null) {
-			throw new InvalidOperationException ("Cannot add a null file.");
-		} else {
-			files.Add (file);
-		}
-	}
-
-	public void deleteFile(File file) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot remove children from a file, only directories.");
-		} else if (file == null) {
-			return;
-		} else {
-			files.Remove (file);
-		}
-	}
-
-	public void deleteAllFiles() {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot remove children from a file, only directories.");
-		} else {
-			files.Clear ();
-		}
-	}
-
-	public bool containsFile(File file) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot query children from a file, only directories.");
-		} else {
-			return files.Contains (file);
-		}
-	}
-
-	public bool containsFile(string filename) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot query children from a file, only directories.");
-		} else {
-			foreach (File fi in files) {
-				if (fi.getFullName().Equals (filename)) {
-					return true;
-				}
-			}
-			return false;
-		}
-	}
-
-	public File getFile(File file) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot access children of a file, only directories.");
-		} else {
-			return files.Find (item => item.getFullName ().Equals (file.getFullName ()));
-		}
-	}
-
-	public File getFile(string fileName) {
-		if (!isDirectory) {
-			throw new InvalidOperationException ("Cannot access children of a file, only directories.");
-		} else {
-			return files.Find (item => item.getFullName ().Equals (fileName));
-		}
-	}
-
 	public string getFullName() {
-		if (isDirectory) {
-			return name;
-		} else {
-			return name + "." + extension;
-		}
+		return name + "." + extension;
 	}
 
 	public string getName() {
 		return name;
 	}
 
-	public void setName(string name, string ext="") {
-		if (isDirectory) {
-			this.name = name;
-		} else {
-			this.name = name;
-			this.extension = ext;
+	public void setName(string name, string ext) {
+		if (ext == null || ext.Length == 0) {
+			throw new InvalidFileException ("Files must have a valid extension.");
 		}
+		this.name = name;
+		this.extension = ext;
 	}
 
+	// Non-directory-file only
 	public string getExtension() {
-		if (isDirectory) {
-			throw new InvalidOperationException ("Directories don't have extensions.");
-		} else {
-			return this.extension;
-		}
+		return this.extension;
 	}
 
 	public string getPath() {
@@ -221,14 +94,11 @@ public class File {
 		return parent;
 	}
 
-	public void moveTo(File newDir) {
+	public void moveTo(Directory newDir) {
 		this.parent.deleteFile (this);
 		newDir.addFile (this);
 
 		this.parent = newDir;
-		this.path = newDir.path + "/" + this.name;
-		if (!this.isDirectory) {
-			this.path += "." + this.extension;
-		}
+		this.path = newDir.path + "/" + this.getFullName();
 	}
 }

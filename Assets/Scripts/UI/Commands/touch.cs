@@ -19,10 +19,10 @@ namespace Commands
 		public override string execute (params string[] args)
 		{
 			//string currentPath = GameManager.currentPath;
-			File currentFile = GameManager.currentFileSystem.getFile (GameManager.currentPath);
+			Directory currentFile = GameManager.currentFileSystem.getFile (GameManager.currentPath) as Directory;
 			string filename = args [1];
 
-			if (!currentFile.isDirectory) {
+			if (!(currentFile is Directory)) {
 				throw new ExecutionException("Invalid state: Current path is not a directory.");
 			}
 
