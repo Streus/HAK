@@ -74,12 +74,12 @@ public class Directory : File {
 	}
 
 	// "ext" is only there to match override. It can be ignored.
-	public void setName(string name, string ext="") {
+	public override void setName(string name, string ext="") {
 		this.name = name;
 	}
 
 	// Returns the name of this directory. Ignores any extensions.
-	public string getFullName() {
+	public override string getFullName() {
 		return name;
 	}
 }

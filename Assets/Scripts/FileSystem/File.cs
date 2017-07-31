@@ -65,15 +65,15 @@ public class File {
 		}
 	}
 
-	public string getFullName() {
+	public virtual string getFullName() {
 		return name + "." + extension;
 	}
 
-	public string getName() {
+	public virtual string getName() {
 		return name;
 	}
 
-	public void setName(string name, string ext) {
+	public virtual void setName(string name, string ext) {
 		if (ext == null || ext.Length == 0) {
 			throw new InvalidFileException ("Files must have a valid extension.");
 		}

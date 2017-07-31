@@ -276,6 +276,7 @@ public class FileSystemTest {
 
 		// Basic sanity checks
 		Assert.AreEqual (1, fs.root.getNumFiles ());
+		Assert.AreEqual (1, dir.getNumFiles ());
 		Assert.AreEqual (dir, fs.root.getFiles () [0]);
 		Assert.AreEqual (f.getParent (), dir);
 		Assert.AreEqual (f.getPath (), "/testing/test.txt");
