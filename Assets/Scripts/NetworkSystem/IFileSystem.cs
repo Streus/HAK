@@ -8,6 +8,5 @@ using UnityEngine;
 public interface IFileSystem {
 	// Assert that classes implementing this have a FileSystem instance.
 
-	FileSystem getFileSystem();
-
+	FileSystem fileSystem { get; }
 }
