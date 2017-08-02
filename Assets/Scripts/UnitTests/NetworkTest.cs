@@ -15,7 +15,7 @@ public class NetworkTest {
 		DesktopNode otherNode = new DesktopNode("test.otherComp", "10.20.30.41");
 		Assert.IsNotNull (otherNode);
 
-		// Some filesystem tests
+		// Some simple filesystem tests
 		FileSystem fs = node.fileSystem;
 		Assert.IsNotNull (fs);
 
@@ -23,7 +23,9 @@ public class NetworkTest {
 		Assert.AreEqual (fi, fs.getFile ("test"));
 		Assert.AreEqual (1, fs.root.getNumFiles ());
 
-
+		// TODO have tests for running an application on desktop,
+		// ensuring proper commands work,
+		// checking users work properly, etc.
 	}
 
 	[Test]
@@ -88,7 +90,7 @@ public class NetworkTest {
 	}
 
 	[Test]
-	public void BasicPingTest() {
+	public void CanPingNodes() {
 		DesktopNode node1 = new DesktopNode ("test.computer", "1");
 		DesktopNode node2 = new DesktopNode ("test.computer", "2");
 		DesktopNode node3 = new DesktopNode ("test.computer", "3");
@@ -147,6 +149,48 @@ public class NetworkTest {
 		Assert.AreEqual (2, node4.ping (node1));
 		Assert.AreEqual (2, node4.ping (node2));
 		Assert.AreEqual (1, node4.ping (node3));
+	}
+
+	[Test]
+	public void CanPingHandleDownNodes() {
+		RouterNode node1 = new RouterNode ("test.computer", "1");
+		RouterNode node2 = new RouterNode ("test.computer", "2");
+		RouterNode node3 = new RouterNode ("test.computer", "3");
+		RouterNode node4 = new RouterNode ("test.computer", "4");
+		RouterNode node5 = new RouterNode ("test.computer", "5");
+
+		// 1 - 2 - 5
+		// | / | /
+		// 3 - 4
+		node1.addConnection (node2);
+		node1.addConnection (node3);
+		node2.addConnection (node3);
+		node2.addConnection (node4);
+		node2.addConnection (node5);
+		node3.addConnection (node4);
+		node4.addConnection (node5);
+
+		Assert.AreEqual( 0, node1.ping(node1));
+		Assert.AreEqual( 1, node1.ping(node2));
+		Assert.AreEqual( 1, node1.ping(node3));
+		Assert.AreEqual( 2, node1.ping(node4));
+		Assert.AreEqual( 2, node1.ping(node5));
+
+		// 1   2   5
+		// |     /
+		// 3 - 4
+		node2.active = false;
+
+		Assert.AreEqual( 0, node1.ping(node1));
+		Assert.AreEqual(-1, node1.ping(node2));
+		Assert.AreEqual( 1, node1.ping(node3));
+		Assert.AreEqual( 2, node1.ping(node4));
+		Assert.AreEqual( 3, node1.ping(node5));
+
+		// Dead nodes can't ping (or do anything)
+		Assert.Throws (typeof(InvalidOperationException), delegate {
+			node2.ping(node1);
+		});
 	}
 
 	[Test]

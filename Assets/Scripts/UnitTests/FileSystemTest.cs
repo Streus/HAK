@@ -343,4 +343,5 @@ public class FileSystemTest {
 		Assert.AreEqual (fs.getFile ("///meow////////////"), dir);
 		Assert.AreEqual (fs.getFile ("//////../meow/./test/.././test/../..////"), fs.root);
 	}
+
 }

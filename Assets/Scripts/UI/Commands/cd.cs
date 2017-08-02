@@ -18,9 +18,15 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
+			NetworkNode node = GameManager.currentHost;
+			if (!(node is IFileSystem)) {
+				throw new ExecutionException ("The current node does not support a file system.");
+			}
+			FileSystem currentFileSystem = (node as IFileSystem).fileSystem;
+
 			string currentPath = GameManager.currentPath;
 			string filename = args [1];
-			File newFile = GameManager.currentFileSystem.getFile (currentPath + "/" + filename);
+			File newFile = currentFileSystem.getFile (currentPath + "/" + filename);
 
 			if (newFile == null) {
 				throw new ExecutionException ("Directory \"" + filename + "\" does not exist.");

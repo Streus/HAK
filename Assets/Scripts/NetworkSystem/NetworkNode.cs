@@ -13,11 +13,13 @@ public abstract class NetworkNode {
 	public List<NetworkNode> connections { get; }
 	public string hostname { get; }
 	public string ip { get; } // It may be necessary to make a class to enforce the format of this
+	public bool active;
 
 	protected NetworkNode(string hostname, string ip) {
 		this.hostname = hostname;
 		this.ip = ip;
 		this.connections = new List<NetworkNode> ();
+		this.active = true;
 	}
 
 	/**
@@ -76,6 +78,10 @@ public abstract class NetworkNode {
 	}
 
 	public long pingRecur(string ipOrHostname, Dictionary<NetworkNode, int> seen) {
+		if (!this.active) {
+			throw new InvalidOperationException ("This node is down. It can't perform any operations.");
+		}
+
 		if (ipOrHostname.Equals (this.ip) || ipOrHostname.Equals (this.hostname)) {
 			return 0;
 		}
@@ -86,6 +92,10 @@ public abstract class NetworkNode {
 
 		long minVal = -1;
 		foreach (NetworkNode n in connections) {
+			if (!n.active) {
+				continue;
+			}
+
 			if (n.ip.Equals (ipOrHostname) || n.hostname.Equals (ipOrHostname)) {
 				return 1;
 			} else {
@@ -104,5 +114,46 @@ public abstract class NetworkNode {
 			}
 		}
 		return minVal;
+	}
+
+	/**
+	 * Like ping, but returns a NetworkNode if it can be reached, or null if not.
+	 */
+	public NetworkNode search(string ipOrHostname) {
+		return searchRecur (ipOrHostname, new Dictionary<NetworkNode, int> (){ { this, 0 } });
+	}
+
+	public NetworkNode searchRecur(string ipOrHostname, Dictionary<NetworkNode, int> seen) {
+		if (!this.active) {
+			throw new InvalidOperationException ("This node is down. It can't perform any operations.");
+		}
+
+		if (ipOrHostname.Equals (this.ip) || ipOrHostname.Equals (this.hostname)) {
+			return this;
+		}
+
+		if (ipOrHostname.Equals ("localhost") || ipOrHostname.Equals ("127.0.0.0")) {
+			return this;
+		}
+
+		foreach (NetworkNode n in connections) {
+			if (!n.active) {
+				continue;
+			}
+
+			if (n.ip.Equals (ipOrHostname) || n.hostname.Equals (ipOrHostname)) {
+				return n;
+			} else {
+				if (!(seen.ContainsKey (n))) {
+					Dictionary<NetworkNode, int> newSeen = new Dictionary<NetworkNode, int> (seen);
+					newSeen.Add (n, 0);
+					NetworkNode found = n.searchRecur (ipOrHostname, newSeen);
+					if (found != null) {
+						return found;
+					}
+				}
+			}
+		}
+		return null;
 	}
 }

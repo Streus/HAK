@@ -12,11 +12,18 @@ public class FileSystem {
 	private static string[] validFileExtensions = new string[] {
 		"txt", "src"
 	};
-	//public static readonly File root = new File (null, "", "" , true);
+
 	public readonly Directory root;
+
+	public List<User> allUsers;
+	public User currentUser;
 
 	public FileSystem() {
 		root = new Directory (null, "");
+
+		User rootUser = new User ("root", "", SECURITY_LEVEL.ROOT);
+		allUsers = new List<User> () { rootUser };
+		currentUser = rootUser;
 	}
 
 	public EditableFile createFile(string name, Directory dir=null) {
@@ -27,10 +34,10 @@ public class FileSystem {
 		string newPath = dir == null ? name : dir.getPath () + "/" + name;
 		if (getFile (newPath) == null) {
 			if (dir == null) {
-				EditableFile file = new EditableFile (root, name);
+				EditableFile file = new EditableFile (this, root, name);
 				return file;
 			} else {
-				EditableFile file = new EditableFile (dir, name);
+				EditableFile file = new EditableFile (this, dir, name);
 				return file;
 			}
 		} else {
@@ -46,10 +53,10 @@ public class FileSystem {
 		string newPath = dir == null ? name : dir.getPath () + "/" + name;
 		if (getFile (newPath) == null) {
 			if (dir == null) {
-				EditableFile file = new EditableFile (root, name, ext);
+				EditableFile file = new EditableFile (this, root, name, ext);
 				return file;
 			} else {
-				EditableFile file = new EditableFile (dir, name, ext);
+				EditableFile file = new EditableFile (this, dir, name, ext);
 				return file;
 			}
 		} else {
@@ -174,6 +181,76 @@ public class FileSystem {
 		}
 		return isValid;
 	}
+
+	/**
+	 * Adds a user to the list of users available to log in as.
+	 * Throws an exception if the user already exists.
+	 */
+	public void addUser(string username, string password, SECURITY_LEVEL level) {
+		if (level == SECURITY_LEVEL.ROOT) {
+			throw new InvalidUserException ("Only one root user can exist.");
+		}
+
+		foreach (User u in allUsers) {
+			if (u.username.Equals (username)) {
+				throw new InvalidUserException ("A user with that username already exists.");
+			}
+		}
+
+		this.allUsers.Add (new User (username, password, level));
+	}
+
+	/**
+	 * Sets currently active user.
+	 * TODO: Maybe the errors should be merged to prevent guessing usernames.
+	 */
+	public void changeUser(string username, string password) {
+		foreach (User u in allUsers) {
+			if (u.username.Equals (username)) {
+				if (u.verifyPassword (password)) {
+					this.currentUser = u;
+					return;
+				} else {
+					throw new InvalidUserException ("Invalid password.");
+				}
+			}
+		}
+		throw new InvalidUserException ("Invalid username.");
+	}
+
+	public void setPermissions(File fi, int to) {
+		int oldR = fi.getPermissions () / 100;
+		int oldA = (fi.getPermissions () / 10) % 10;
+		//int oldN = fi.getPermissions () % 10;
+
+		int newR = to / 100;
+		int newA = (to / 10) % 10;
+		int newN = to % 10;
+
+		if (newR < 0 || newR > 7 || newA < 0 || newA > 7 || newN < 0 || newN > 7) {
+			throw new InvalidFileException ("Invalid permission flag. Each flag is 0 >= x >= 7.");
+		}
+
+		// Non-admins can only change non-admin permissions.
+		if (this.currentUser.adminLevel == SECURITY_LEVEL.NONADMIN && (oldR == newR) && (oldA == newA)) {
+			fi.setPermissions (to);
+			return;
+		}
+
+		// Admins can change non-admin and admin permissions.
+		if (this.currentUser.adminLevel == SECURITY_LEVEL.ADMIN && (oldR == newR)) {
+			fi.setPermissions (to);
+			return;
+		}
+
+		// The root user can change anything.
+		if (this.currentUser.adminLevel == SECURITY_LEVEL.ROOT) {
+			fi.setPermissions (to);
+			return;
+		}
+
+		throw new InvalidUserException ("Cannot change permissions for users with higher privilege.");
+	}
 }
 
 /** 
@@ -191,4 +268,13 @@ public class InvalidFileException : Exception {
 public class InvalidOperationException : Exception {
 	public InvalidOperationException() : base("Unsupported file operation") {}
 	public InvalidOperationException(string msg) : base(msg) {}
+}
+
+/*
+ * Thrown if you have invalid permissions for a file operation, or if you fail
+ * to do a valid user operation.
+ */
+public class InvalidUserException : Exception {
+	public InvalidUserException() : base("Unsupported user operation") {}
+	public InvalidUserException(string msg) : base(msg) {}
 }

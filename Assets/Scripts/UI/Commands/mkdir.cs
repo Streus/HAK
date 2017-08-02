@@ -18,7 +18,13 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			Directory currentFile = GameManager.currentFileSystem.getFile (GameManager.currentPath) as Directory;
+			NetworkNode node = GameManager.currentHost;
+			if (!(node is IFileSystem)) {
+				throw new ExecutionException ("The current node does not support a file system.");
+			}
+			FileSystem currentFileSystem = (node as IFileSystem).fileSystem;
+
+			Directory currentFile = currentFileSystem.getFile (GameManager.currentPath) as Directory;
 			string filename = args [1];
 
 			if (!(currentFile is Directory)) {
@@ -30,7 +36,7 @@ namespace Commands
 			}
 
 			try {
-				GameManager.currentFileSystem.createDirectory(filename, currentFile);
+				currentFileSystem.createDirectory(filename, currentFile);
 				return "Created new directory \"" + filename + "\".";
 			} catch (InvalidFileException e) {
 				throw new ExecutionException("Could not create directory. Reason: " + e.Message);
