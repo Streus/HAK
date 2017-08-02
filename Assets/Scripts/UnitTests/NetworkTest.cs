@@ -34,6 +34,7 @@ public class NetworkTest {
 		DesktopNode otherNode = new DesktopNode("test.otherComp", "10.20.30.41");
 		Assert.IsNotNull (otherNode);
 
+		// We check that adding affects both nodes.
 		node.addConnection (otherNode);
 		Assert.AreEqual (1, node.connections.Count);
 		Assert.AreEqual (otherNode, node.getConnection(otherNode.hostname));
@@ -50,6 +51,7 @@ public class NetworkTest {
 		DesktopNode otherNode = new DesktopNode("test.otherComp", "10.20.30.41");
 		Assert.IsNotNull (otherNode);
 
+		// We check that deleting affects both nodes.
 		node.addConnection (otherNode);
 		node.deleteConnection (otherNode);
 
@@ -58,7 +60,31 @@ public class NetworkTest {
 
 		Assert.AreEqual (0, otherNode.connections.Count);
 		Assert.IsNull (otherNode.getConnection(node.hostname));
+	}
 
+	[Test]
+	public void CanGetConnections() {
+		DesktopNode node = new DesktopNode ("test.computer", "10.20.30.40");
+		Assert.IsNotNull (node);
+
+		DesktopNode otherNode = new DesktopNode("test.otherComp", "10.20.30.41");
+		Assert.IsNotNull (otherNode);
+
+		node.addConnection (otherNode);
+		Assert.AreEqual (1, node.connections.Count);
+		Assert.AreEqual (1, otherNode.connections.Count);
+
+		Assert.AreEqual (otherNode, node.getConnection ("test.otherComp"));
+		Assert.AreEqual (otherNode, node.getConnection ("10.20.30.41"));
+
+		// What happens if a node appears identical to us? We shouldn't find ourselves.
+		DesktopNode selfSimilarNode = new DesktopNode ("test.computer", "10.20.30.40");
+		node.addConnection (selfSimilarNode);
+
+		Assert.AreEqual (selfSimilarNode, node.getConnection ("test.computer"));
+		Assert.AreEqual (selfSimilarNode, node.getConnection ("10.20.30.40"));
+		Assert.AreNotEqual (node, node.getConnection ("test.computer"));
+		Assert.AreNotEqual (node, node.getConnection ("10.20.30.40"));
 	}
 
 	[Test]
@@ -68,17 +94,18 @@ public class NetworkTest {
 		DesktopNode node3 = new DesktopNode ("test.computer", "3");
 		DesktopNode node4 = new DesktopNode ("test.computer", "4");
 
+		// 1 <-> 2 <-> 3
 		node1.addConnection (node2);
 		node2.addConnection (node3);
 
-		Assert.AreEqual (0, node1.ping (node1));
-		Assert.AreEqual (1, node1.ping (node2));
+		Assert.AreEqual (0, node1.ping (node1)); // Can you ping yourself?
+		Assert.AreEqual (1, node1.ping (node2)); // Can you ping direct connections?
 		Assert.AreEqual (1, node2.ping (node1));
 		Assert.AreEqual (1, node2.ping (node3));
 		Assert.AreEqual (1, node3.ping (node2));
-		Assert.AreEqual (2, node1.ping (node3));
+		Assert.AreEqual (2, node1.ping (node3)); // Can you ping distant connections?
 		Assert.AreEqual (2, node3.ping (node1));
-		Assert.AreEqual (-1, node1.ping (node4));
+		Assert.AreEqual (-1, node1.ping (node4)); // Does an invalid ping fail?
 		Assert.AreEqual (-1, node2.ping (node4));
 		Assert.AreEqual (-1, node3.ping (node4));
 		Assert.AreEqual (-1, node4.ping (node1));
@@ -93,14 +120,33 @@ public class NetworkTest {
 		Assert.AreEqual (1, node2.ping (node1));
 		Assert.AreEqual (1, node2.ping (node3));
 		Assert.AreEqual (1, node3.ping (node2));
-		Assert.AreEqual (1, node1.ping (node3)); // Only these two change
-		Assert.AreEqual (1, node3.ping (node1)); // ""
+		Assert.AreEqual (1, node1.ping (node3)); // There is now
+		Assert.AreEqual (1, node3.ping (node1)); // a shorter path.
 		Assert.AreEqual (-1, node1.ping (node4));
 		Assert.AreEqual (-1, node2.ping (node4));
 		Assert.AreEqual (-1, node3.ping (node4));
 		Assert.AreEqual (-1, node4.ping (node1));
 		Assert.AreEqual (-1, node4.ping (node2));
 		Assert.AreEqual (-1, node4.ping (node3));
+
+		//    1
+		//   / \
+		//  2-- 3-- 4
+		node3.addConnection (node4);
+
+		Assert.AreEqual (0, node1.ping (node1));
+		Assert.AreEqual (1, node1.ping (node2));
+		Assert.AreEqual (1, node2.ping (node1));
+		Assert.AreEqual (1, node2.ping (node3));
+		Assert.AreEqual (1, node3.ping (node2));
+		Assert.AreEqual (1, node1.ping (node3));
+		Assert.AreEqual (1, node3.ping (node1));
+		Assert.AreEqual (2, node1.ping (node4)); // Below these change
+		Assert.AreEqual (2, node2.ping (node4));
+		Assert.AreEqual (1, node3.ping (node4));
+		Assert.AreEqual (2, node4.ping (node1));
+		Assert.AreEqual (2, node4.ping (node2));
+		Assert.AreEqual (1, node4.ping (node3));
 	}
 
 	[Test]

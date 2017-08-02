@@ -58,7 +58,9 @@ public abstract class NetworkNode {
 	 * Attempt to ping a node given by the provided hostname or ip. 
 	 * 
 	 * This will conduct a DFS network search recursively through
-	 * all connected nodes until the provided host is found.
+	 * all connected nodes until the provided host is found. It will then
+	 * continue through all paths to find a shorter one, ignoring any
+	 * cycles in the graph. 
 	 * 
 	 * Returns:
 	 * 	>0 if connected to the given hostname (number of hops)
@@ -66,14 +68,14 @@ public abstract class NetworkNode {
 	 *  -1 if could not find a connection to the given hostname.
 	 */
 	public long ping(string ipOrHostname) {
-		return pingRecur (ipOrHostname, new List<NetworkNode> (){ this });
+		return pingRecur (ipOrHostname, new Dictionary<NetworkNode, int> (){{ this, 0 }});
 	}
 
 	public long ping(NetworkNode node) {
-		return pingRecur(node.ip, new List<NetworkNode>(){ this });
+		return pingRecur(node.ip, new Dictionary<NetworkNode, int>(){{ this, 0 }});
 	}
 
-	public long pingRecur(string ipOrHostname, List<NetworkNode> seen) {
+	public long pingRecur(string ipOrHostname, Dictionary<NetworkNode, int> seen) {
 		if (ipOrHostname.Equals (this.ip) || ipOrHostname.Equals (this.hostname)) {
 			return 0;
 		}
@@ -82,19 +84,25 @@ public abstract class NetworkNode {
 			return 0;
 		}
 
+		long minVal = -1;
 		foreach (NetworkNode n in connections) {
 			if (n.ip.Equals (ipOrHostname) || n.hostname.Equals (ipOrHostname)) {
 				return 1;
 			} else {
-				if (!(seen.Contains (n))) {
-					seen.Add (n);
-					long pingVal = n.pingRecur (ipOrHostname, seen);
+				if (!(seen.ContainsKey (n))) {
+					Dictionary<NetworkNode, int> newSeen = new Dictionary<NetworkNode, int> (seen);
+					newSeen.Add (n, 0);
+					long pingVal = 1 + n.pingRecur (ipOrHostname, newSeen);
 					if (pingVal > 0) {
-						return 1 + pingVal;
+						if (minVal == -1) {
+							minVal = pingVal;
+						} else if (pingVal < minVal) {
+							minVal = pingVal;
+						}
 					}
 				}
 			}
 		}
-		return -1;
+		return minVal;
 	}
 }
