@@ -36,7 +36,8 @@ namespace Commands
 			}
 				
 			try {
-				currentFileSystem.createFile(filename, currentFile);
+				//currentFileSystem.createFile(filename, currentFile);
+				currentFileSystem.createFile(currentFile.getPath() + "/" + filename);
 				return "Created new file \"" + filename + "\".";
 			} catch (InvalidFileException e) {
 				throw new ExecutionException("Could not create file. Reason: " + e.Message);

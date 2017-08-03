@@ -10,10 +10,14 @@ public class GameManager : MonoBehaviour {
 	// That should hold on to a FileSystem reference on its own.
 	//public static FileSystem currentFileSystem = new FileSystem();
 
+	public static Network currentLevel = null;
+
 	public static NetworkNode currentHost = null;
 
 	// Use this for initialization
 	void Start () {
+		//TODO: Make this into a Network object, and serialize it into a level.
+		/*
 		RouterNode route1 = new RouterNode ("test1", "1");
 		RouterNode route2 = new RouterNode ("test2", "2");
 
@@ -29,6 +33,10 @@ public class GameManager : MonoBehaviour {
 		desk3.addConnection (route2);
 
 		currentHost = desk1;
+		*/
+
+		currentLevel = Network.getLevel1 ();
+		currentHost = currentLevel.getStart ();
 	}
 	
 	// Update is called once per frame

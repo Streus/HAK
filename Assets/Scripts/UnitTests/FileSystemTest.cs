@@ -22,8 +22,6 @@ public class FileSystemTest {
 		Assert.AreEqual ("test.txt", f.getFullName());
 		Assert.AreEqual ("test", f.getName());
 		Assert.AreEqual ("txt", f.getExtension ());
-		//Assert.AreEqual ("", f.getContents ());
-		//Assert.AreEqual (false, f.isDirectory);
 		Assert.AreEqual ("/test.txt", f.getPath ());
 		Assert.AreEqual (fs.root, f.getParent ());
 	}
@@ -49,12 +47,6 @@ public class FileSystemTest {
 
 		f = fs.createFile ("test-123-hello1_new.txt");
 		Assert.IsNotNull (f);
-
-		f = fs.createFile ("test", "txt");
-		Assert.IsNotNull (f);
-
-		f = fs.createFile ("tes123t", "txt");
-		Assert.IsNotNull (f);
 	}
 
 	[Test]
@@ -70,8 +62,56 @@ public class FileSystemTest {
 		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile ("he!llo_world123.txt"); });
 		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile ("abc@.tst"); });
 		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile ("abc.tst"); });
-		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile ("abc", "tst"); });
-		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile ("1231@afa", "txt"); });
+	}
+
+	// TODO: Test this more thoroughly. Create many positive and negative cases, 
+	// test for deeper nested directories, test for circular generation (if possible),
+	// test for creating files in directories that don't yet exist.
+	[Test]
+	public void CanCreateFilesDirectlyInDirectories() {
+		FileSystem fs = new FileSystem ();
+		Assert.IsNotNull (fs);
+
+		Directory d1 = fs.createDirectory ("test");
+		Directory d2 = fs.createDirectory (d1.getPath() + "/" + "meow");
+
+		// Can we create a file the normal way?
+		File f1 = fs.createFile ("hello.txt");
+		Assert.AreEqual (f1, fs.root.getFile ("hello.txt"));
+
+		// Can we create a file inside a directory?
+		File f2 = fs.createFile ("test/hello.txt");
+		Assert.AreEqual (2, d1.getNumFiles ());
+		Assert.AreEqual (f2, d1.getFile ("hello.txt"));
+		Assert.AreEqual (f2, fs.getFile ("test/hello.txt"));
+		Assert.AreEqual (f2, fs.getFile ("/test/hello.txt"));
+
+		// How about with a leading forward slash?
+		File f3 = fs.createFile ("/test/hello2.txt");
+		Assert.AreEqual (f3, fs.getFile ("test/hello2.txt"));
+		Assert.AreEqual (f3, fs.getFile ("/test/hello2.txt"));
+
+		// How about nested deeper?
+		File f4 = fs.createFile("test/meow/hello.txt");
+		Assert.AreEqual (f4, fs.getFile ("test/meow/hello.txt"));
+		Assert.AreEqual (f4, fs.getFile ("/test/meow/hello.txt"));
+
+		File f5 = fs.createFile("/test/meow/hello2.txt");
+		Assert.AreEqual (f5, fs.getFile ("test/meow/hello2.txt"));
+		Assert.AreEqual (f5, fs.getFile ("/test/meow/hello2.txt"));
+
+		// We should fail if there's ever a normal file along the way.
+		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile("/test/hello.txt/wrong.txt"); });
+
+		// We should fail on bad files.
+		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile("hello"); });
+		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile("meow.#("); });
+		Assert.Throws(typeof(InvalidFileException), delegate { fs.createFile("george's computer.txt"); });
+
+		// We should be able to handle weird directories.
+		File f6 = fs.createFile("/..////.././//./////./.././//./../test/../test//////./meow/./../meow/world.txt");
+		Assert.AreEqual (f6, fs.getFile ("test/meow/world.txt"));
+		Assert.AreEqual (f6, fs.getFile ("/test/meow/world.txt"));
 	}
 
 	[Test]
@@ -84,18 +124,6 @@ public class FileSystemTest {
 		f.setContents ("hello world");
 		Assert.AreEqual (f.getContents (), "hello world");
 	}
-
-	/*
-	[Test]
-	public void CannotSetDirectoryContents() {
-		FileSystem fs = new FileSystem ();
-		Assert.IsNotNull (fs);
-
-		File f = fs.createDirectory ("test");
-		Assert.Throws(typeof(InvalidOperationException), delegate { f.setContents ("hello world"); });
-		Assert.Throws(typeof(InvalidOperationException), delegate { f.getContents (); });
-	}
-	*/
 
 	[Test]
 	public void CanAddFilesToDirectory() {
@@ -121,7 +149,8 @@ public class FileSystemTest {
 		Assert.IsNotNull (dir);
 		Assert.AreEqual (dir.getNumFiles (), 0);
 
-		File file = fs.createFile("hello.txt", dir);
+		//File file = fs.createFile("hello.txt", dir);
+		File file = fs.createFile("/test/hello.txt");
 		Assert.IsNotNull (file);
 
 		// Are the parents showing up properly?
@@ -135,7 +164,7 @@ public class FileSystemTest {
 		Assert.IsNotNull (fs);
 
 		Directory dir = fs.createDirectory ("test");
-		File file = fs.createFile("hello.txt", dir);
+		File file = fs.createFile("/test/hello.txt");
 
 		// Are the paths correct?
 		Assert.AreEqual (dir.getPath (), "/test");
@@ -147,7 +176,7 @@ public class FileSystemTest {
 		Assert.IsNotNull (fs);
 
 		Directory dir = fs.createDirectory ("test");
-		File file = fs.createFile("hello.txt", dir);
+		File file = fs.createFile("test/hello.txt");
 
 		// Does root now contain the directory?
 		Assert.AreEqual(1, fs.root.getNumFiles());
@@ -230,7 +259,7 @@ public class FileSystemTest {
 		Assert.AreEqual (dir.getNumFiles (), 1);
 		Assert.AreEqual (dir2.getNumFiles (), 1);
 
-		Directory dir3 = fs.createDirectory ("testing3", dir2);
+		Directory dir3 = fs.createDirectory (dir2.getPath() + "/" + "testing3");
 		Assert.AreEqual (dir3.getPath (), dir2.getPath () + "/" + dir3.getFullName ());
 		Assert.AreEqual (dir2.getNumFiles (), 2);
 
@@ -272,7 +301,7 @@ public class FileSystemTest {
 		Assert.IsNotNull (fs);
 
 		Directory dir = fs.createDirectory ("testing");
-		File f = fs.createFile ("test.txt", dir);
+		File f = fs.createFile ("testing/test.txt");
 
 		// Basic sanity checks
 		Assert.AreEqual (1, fs.root.getNumFiles ());
@@ -326,7 +355,7 @@ public class FileSystemTest {
 		Assert.AreEqual(fs.getFile("./../././../././meow"), dir);
 		Assert.IsNull(fs.getFile(".../meow"));
 
-		Directory dir2 = fs.createDirectory ("test", dir);
+		Directory dir2 = fs.createDirectory (dir.getPath() + "/" + "test");
 		Assert.AreEqual (fs.root.getNumFiles (), 1);
 		Assert.IsNull(fs.getFile("test"));
 		Assert.AreEqual(fs.getFile("meow/test"), dir2);

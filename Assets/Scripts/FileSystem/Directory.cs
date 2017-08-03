@@ -6,11 +6,12 @@ public class Directory : File {
 	// Directory-only. Null for files; set on instantiation for directories.
 	private List<File> files = null;
 
-	public Directory(Directory parent, string name) {
-		Setup (parent, name);
+	public Directory(FileSystem fs, Directory parent, string name) {
+		Setup (fs, parent, name);
 	}
 
-	private void Setup(Directory parent, string name) {
+	private void Setup(FileSystem fs, Directory parent, string name) {
+		this.filesystem = fs;
 		this.name = name;
 		this.parent = parent;
 		this.path = parent == null ? "" : parent.path + "/" + name;

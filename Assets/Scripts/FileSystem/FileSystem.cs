@@ -19,67 +19,87 @@ public class FileSystem {
 	public User currentUser;
 
 	public FileSystem() {
-		root = new Directory (null, "");
+		root = new Directory (this, null, "");
 
+		//TODO: should this be publicly visible? readonly?
 		User rootUser = new User ("root", "", SECURITY_LEVEL.ROOT);
 		allUsers = new List<User> () { rootUser };
 		currentUser = rootUser;
 	}
 
-	public EditableFile createFile(string name, Directory dir=null) {
-		if (!isValidFullFileName (name)) {
-			throw new InvalidFileException ("Invalid file name.");
+	/**
+	 * In this case, "name" includes the full path. Thus,
+	 * createFile("/home/test/pass.txt") is equivalent to createFile("pass.txt", test).
+	 * 
+	 * TODO: simplify this code a bit more. (ditto for directory below)
+	 */
+	public EditableFile createFile(string name) {
+		if (name == null || name.Length == 0) {
+			throw new InvalidFileException ("Invalid file name (null or 0 length).");
 		}
 
-		string newPath = dir == null ? name : dir.getPath () + "/" + name;
-		if (getFile (newPath) == null) {
-			if (dir == null) {
-				EditableFile file = new EditableFile (this, root, name);
-				return file;
-			} else {
-				EditableFile file = new EditableFile (this, dir, name);
-				return file;
-			}
-		} else {
+		if (getFile (name) != null) {
 			throw new InvalidFileException ("File already exists!");
+		}
+
+		// This is a file to be placed in the root directory.
+		if (!name.Contains ("/")) {
+			if (!isValidFullFileName (name)) {
+				throw new InvalidFileException ("Invalid file name.");
+			}
+			EditableFile file = new EditableFile (this, root, name);
+			return file;
+		} else {
+			// Otherwise, try to get the directory we're placing this into.
+			string path = name.Substring(0, name.LastIndexOf("/"));
+			string filename = name.Substring (name.LastIndexOf ("/") + 1);
+			File dir = getFile (path);
+
+			if (path == null || !(dir is Directory)) {
+				// TODO: Can change this to generate the required path instead of failing.
+				throw new InvalidFileException ("Cannot create file: path \"" + path + "\" does not exist.");
+			}
+			if (!isValidFullFileName (filename)) {
+				throw new InvalidFileException ("Invalid file name.");
+			}
+
+			EditableFile file = new EditableFile (this, dir as Directory, filename);
+			return file;
 		}
 	}
 
-	public EditableFile createFile(string name, string ext, Directory dir=null) {
-		if (!isValidFileName (name) || !isValidExtension(ext)) {
-			throw new InvalidFileException ("Invalid file name.");
+	public Directory createDirectory(string name) {
+		if (name == null || name.Length == 0) {
+			throw new InvalidFileException ("Invalid directory name (null or 0 length).");
 		}
 
-		string newPath = dir == null ? name : dir.getPath () + "/" + name;
-		if (getFile (newPath) == null) {
-			if (dir == null) {
-				EditableFile file = new EditableFile (this, root, name, ext);
-				return file;
-			} else {
-				EditableFile file = new EditableFile (this, dir, name, ext);
-				return file;
-			}
-		} else {
-			throw new InvalidFileException ("File already exists!");
-		}
-	}
-
-	public Directory createDirectory(string name, Directory dir=null) {
-		if (!isValidFileName (name)) {
-			throw new InvalidFileException ("Invalid file name.");
-		}
-
-		string newPath = dir == null ? name : dir.getPath () + "/" + name;
-		if (getFile (newPath) == null) {
-			if (dir == null) {
-				Directory file = new Directory (root, name);
-				return file;
-			} else {
-				Directory file = new Directory (dir, name);
-				return file;
-			}
-		} else {
+		if (getFile (name) != null) {
 			throw new InvalidFileException ("Directory already exists!");
+		}
+
+		// This is a file to be placed in the root directory.
+		if (!name.Contains ("/")) {
+			if (!isValidFileName (name)) {
+				throw new InvalidFileException ("Invalid directory name.");
+			}
+			Directory file = new Directory (this, root, name);
+			return file;
+		} else {
+			// Otherwise, try to get the directory we're placing this into.
+			string path = name.Substring(0, name.LastIndexOf("/"));
+			string filename = name.Substring (name.LastIndexOf ("/") + 1);
+			File dir = getFile (path);
+
+			if (path == null || !(dir is Directory)) {
+				// TODO: Can change this to generate the required path instead of failing.
+				throw new InvalidFileException ("Cannot create directory: path \"" + path + "\" does not exist.");
+			}
+			if (!isValidFileName (filename)) {
+				throw new InvalidFileException ("Invalid directory name.");
+			}
+
+			Directory file = new Directory (this, dir as Directory, filename);
+			return file;
 		}
 	}
 
@@ -103,6 +123,7 @@ public class FileSystem {
 		toMove.moveTo (newDir);
 	}
 
+	//TODO: possibly rename this to "find" or "search" or "exists".
 	public File getFile(string path) {
 		if (path == null) {
 			return null;
@@ -252,6 +273,8 @@ public class FileSystem {
 		throw new InvalidUserException ("Cannot change permissions for users with higher privilege.");
 	}
 }
+
+// TODO: consider merging exceptions to prevent need to remember multiple types.
 
 /** 
  * Thrown if you try to create or modify an invalid file; i.e., an invalid
