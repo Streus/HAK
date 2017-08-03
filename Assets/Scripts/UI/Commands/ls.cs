@@ -18,10 +18,13 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			File currentFile = FileSystem.getFile (GameManager.currentPath);
-			if (!currentFile.isDirectory) {
-				throw new ExecutionException("Invalid state: Current path is not a directory.");
+			NetworkNode node = GameManager.currentHost;
+			if (!(node is IFileSystem)) {
+				throw new ExecutionException ("The current node does not support a file system.");
 			}
+			FileSystem currentFileSystem = (node as IFileSystem).fileSystem;
+
+			Directory currentFile = currentFileSystem.getFile (GameManager.currentPath) as Directory;
 
 			List<File> files = currentFile.getFiles ();
 			if (files.Count == 0) {
@@ -30,7 +33,7 @@ namespace Commands
 				string toReturn = "";
 				if (files.Count > 0) {
 					toReturn = files [0].getFullName ();
-					if (files [0].isDirectory) {
+					if (files [0] is Directory) {
 						toReturn += "/";
 					}
 				}
@@ -39,7 +42,7 @@ namespace Commands
 					toReturn += "\n" + files [i].getFullName ();
 
 					// Possibly display in a different color
-					if (files [i].isDirectory) {
+					if (files [i] is Directory) {
 						toReturn += "/";	
 					}
 				}

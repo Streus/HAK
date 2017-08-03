@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace Commands
 {
-	public class cd : Command
+	public class cat : Command
 	{
 		public override string getHelp ()
 		{
-			return "Change directory. Usage: cd <directory>.";
+			return "Print contents of a file. Usage: cat <file>.";
 		}
 
 		public override string getInvocation ()
 		{
-			return "cd";
+			return "cat";
 		}
 
 		public override string execute (params string[] args)
@@ -29,18 +29,23 @@ namespace Commands
 			File newFile = currentFileSystem.getFile (currentPath + "/" + filename);
 
 			if (newFile == null) {
-				throw new ExecutionException ("Directory \"" + filename + "\" does not exist.");
+				throw new ExecutionException ("File \"" + filename + "\" does not exist.");
 			}
 
-			/*
-			if (!newFile.isDirectory) {
-				throw new ExecutionException ("Can't change directory into a non-directory file.");
+			if (newFile is Directory) {
+				throw new ExecutionException ("Can't cat file: is directory.");
 			}
-			*/
 
-			// This forces a simplification of paths, so things like "/test/../test/.." get turned into "/".
-			GameManager.currentPath = newFile.getPath ();
-			return "Current directory is now \"" + GameManager.currentPath + "/\".";
+			if (!(newFile is EditableFile)) {
+				throw new ExecutionException ("Can't cat file: contents are unreadable.");
+			}
+
+			EditableFile newFileE = newFile as EditableFile;
+			try {
+				return "Contents of file \"" + newFileE.getFullName() + "\":\n" + newFileE.getContents ();
+			} catch (InvalidUserException iue) {
+				throw new ExecutionException (iue.Message);
+			}
 		}
 	}
 }
