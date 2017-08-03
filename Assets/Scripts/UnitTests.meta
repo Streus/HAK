@@ -1,7 +1,13 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
+guid: cb14f522f7a5a4b67b928dcb541c6d21
+folderAsset: yes
+timeCreated: 1501525975
+=======
 guid: 0a397c96880f54951b7298d3a45f3d3a
 folderAsset: yes
 timeCreated: 1501479146
+>>>>>>> george-filesystem
 licenseType: Free
 DefaultImporter:
   userData: 
