@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		//TODO: Make this into a Network object, and serialize it into a level.
-		/*
 		RouterNode route1 = new RouterNode ("test1", "1");
 		RouterNode route2 = new RouterNode ("test2", "2");
 
@@ -33,10 +32,11 @@ public class GameManager : MonoBehaviour {
 		desk3.addConnection (route2);
 
 		currentHost = desk1;
-		*/
 
-		currentLevel = Network.getLevel1 ();
-		currentHost = currentLevel.getStart ();
+		GenerateTexture.renderTexture ("test");
+
+		//currentLevel = Network.getLevel1 ();
+		//currentHost = currentLevel.getStart ();
 	}
 	
 	// Update is called once per frame
