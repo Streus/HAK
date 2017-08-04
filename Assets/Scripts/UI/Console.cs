@@ -101,8 +101,8 @@ public class Console : MonoBehaviour
 	}
 	private void buildCommandList()
 	{
-		string baseDir = Directory.GetCurrentDirectory ();
-		string[] files = Directory.GetFiles (baseDir + "/Assets/Scripts/UI/Commands");
+		string baseDir = System.IO.Directory.GetCurrentDirectory ();
+		string[] files = System.IO.Directory.GetFiles (baseDir + "/Assets/Scripts/UI/Commands");
 		foreach (string file in files)
 		{
 			if (file.EndsWith (".cs"))
