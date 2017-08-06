@@ -18,7 +18,7 @@ namespace Commands
 
 		public override string execute (params string[] args)
 		{
-			Console.log.println (args [1], Console.LogTag.info);
+			Console.log.println (args [1]);
 			return "";
 		}
 	}

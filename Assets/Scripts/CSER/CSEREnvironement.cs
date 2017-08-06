@@ -36,6 +36,13 @@ public class CSEREnvironment
 	// The current scope in execution
 	private int scope;
 
+	// Used to capture command output
+	private string commandOuput;
+	private void captureCommand(string s)
+	{
+		commandOuput = s;
+	}
+
 	/* Static Methods */
 
 	// Parse an individual input line and return an array of args
@@ -123,7 +130,7 @@ public class CSEREnvironment
 						string[] args = parseLine (instructions [currLine]);
 						if (args.Length != 4)
 						{
-							Console.log.println ("Malformed For statement on line " + currLine + ".", Console.LogTag.error);
+							Console.log.println ("Malformed For statement on line " + currLine + ".", true);
 							return false;
 						}
 
@@ -144,16 +151,17 @@ public class CSEREnvironment
 							catch(Exception e)
 							#pragma warning restore 0168
 							{
-								Console.log.println ("Malformed For statement on line " + currLine + ".", Console.LogTag.error);
+								Console.log.println ("Malformed For statement on line " + currLine + ".", true);
 								e.ToString (); // Supress unused warnings
 								return false;
 							}
 						}
 						else
 						{
-							string output = "";
-							Console.log.execute (args [2], out output);
-							commandOut = output.Split ('\n');
+							Console.log.setStdOut (captureCommand);
+							Console.log.execute (args [2]);
+							commandOut = commandOuput.Split ('\n');
+							Console.log.resetStdOut ();
 						}
 
 						ForStatement statement;
@@ -171,7 +179,7 @@ public class CSEREnvironment
 				if (!foundEnd)
 				{
 					Console.log.println ("For statement on line " + currLine + " has no corresponding" +
-					" End statement.", Console.LogTag.error);
+					" End statement.", true);
 				}
 
 				//save for loop info
@@ -200,11 +208,7 @@ public class CSEREnvironment
 			}
 			else
 			{
-				string output = "";
-				bool success = Console.log.execute(instructions[currLine].TrimStart('\t', ' '), out output);
-				Console.LogTag outTag = !success ? Console.LogTag.error : Console.LogTag.buildConOut ();
-				if (output != "")
-					Console.log.println (output, outTag);
+				Console.log.execute(instructions[currLine].TrimStart('\t', ' '));
 			}
 		}
 
@@ -255,7 +259,7 @@ public class CSEREnvironment
 			if(variables.TryGetValue (i.ToString() + "~" + name, out v))
 				return v.value;
 
-		Console.log.println (name + " does not exist in the current context.", Console.LogTag.error);
+		Console.log.println (name + " does not exist in the current context.", true);
 		return name;
 	}
 
@@ -270,7 +274,7 @@ public class CSEREnvironment
 	{
 		if (scope == 0)
 		{
-			Console.log.println ("Cannot close global scope.", Console.LogTag.error);
+			Console.log.println ("Cannot close global scope.", true);
 			return false;
 		}
 

@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Reflection;
 using UnityEngine.UI;
 using System.IO;
+using System;
 
 public class Console : MonoBehaviour
 {
@@ -20,7 +21,8 @@ public class Console : MonoBehaviour
 
 	// The output display for the Console
 	[SerializeField]
-	private Text output;
+	private Transform output;
+	private List<string> outHistory;
 
 	// The base RectTransform of the Console
 	[SerializeField]
@@ -30,8 +32,16 @@ public class Console : MonoBehaviour
 	[SerializeField]
 	private Menu menu;
 
-	// The maximum number of lines output will display (also history size)
-	public int linesMax;
+	// The maximum number of lines a message can contain
+	public int messageLengthMax;
+
+	// The maximum number of messages that can be active at a time
+	public int activeMessagesMax;
+
+	// Output stream stuff
+	public delegate void OutStream(string msg);
+	private OutStream stdOut;
+	private OutStream stdErr;
 
 	// A list of all available commands
 	private Dictionary<string, Command> commands;
@@ -53,14 +63,13 @@ public class Console : MonoBehaviour
 
 	public string[] getHistory()
 	{
-		return history.ToArray ();
+		return inHistory.ToArray ();
 	}
 
-	// Every individual 
-	private List<string> history;
+	// Every individual line set in through this console's input
+	private List<string> inHistory;
 	private int historyIndex;
 
-	[SerializeField]
 	private bool _enabled;
 	public bool getEnabled() { return _enabled; }
 	public void setEnabled(bool enabled)
@@ -91,8 +100,12 @@ public class Console : MonoBehaviour
 			commands = new Dictionary<string, Command> ();
 			buildCommandList ();
 
-			history = new List<string> ();
+			inHistory = new List<string> ();
+			outHistory = new List<string> ();
 			historyIndex = -1;
+
+			stdOut = sendToOut;
+			stdErr = sendToErr;
 
 			new CSEREnvironment (); //DEBUG
 		}
@@ -143,17 +156,39 @@ public class Console : MonoBehaviour
 
 		if (Input.GetKeyDown (KeyCode.UpArrow))
 		{
-			historyIndex = (historyIndex + 1) % history.Count;
-			input.text = history [historyIndex];
+			historyIndex = (historyIndex + 1) % inHistory.Count;
+			input.text = inHistory [historyIndex];
 		}
 
 		if (Input.GetKeyDown (KeyCode.DownArrow))
 		{
 			historyIndex--;
 			if (historyIndex < 0)
-				historyIndex = history.Count - 1;
-			input.text = history [historyIndex];
+				historyIndex = inHistory.Count - 1;
+			input.text = inHistory [historyIndex];
 		}
+	}
+
+	// --- Output Stream Management ---
+
+	// Set the destination of the stdOut stream
+	public void setStdOut(OutStream stream)
+	{
+		stdOut = stream;
+	}
+	public void resetStdOut()
+	{
+		stdOut = sendToOut;
+	}
+
+	// Set the destination of the stdErr stream
+	public void setStdErr(OutStream stream)
+	{
+		stdErr = stream;
+	}
+	public void resetStdErr()
+	{
+		stdErr = sendToErr;
 	}
 
 	// Invoked when the user presses enter and the console is active
@@ -163,11 +198,7 @@ public class Console : MonoBehaviour
 			return;
 		
 		//use the text from input to execute a command
-		string output = "";
-		bool success = execute(input.text, out output);
-		LogTag outTag = !success ? LogTag.error : LogTag.buildConOut();
-		if (output != "")
-			println (output, outTag);
+		execute(input.text);
 	}
 
 	// Execute a file of prepared commands, treating each line as an indiv. command
@@ -183,7 +214,7 @@ public class Console : MonoBehaviour
 		catch(IOException ioe)
 		#pragma warning restore 0168
 		{
-			println ("Failed to load " + fileName + ".", LogTag.error);
+			println ("Failed to load " + fileName + ".", true);
 			return false;
 		}
 
@@ -193,11 +224,12 @@ public class Console : MonoBehaviour
 	}
 
 	// Attempt to execute a command. Fills output with the result of a successful command
-	public bool execute(string command, out string output)
+	public bool execute(string command)
 	{
-		history.Insert (0, input.text);
+		inHistory.Insert (0, input.text);
 
 		bool success = true;
+		string result = "";
 
 		//parse input
 		string[] args = CSEREnvironment.parseLine(command);
@@ -208,98 +240,106 @@ public class Console : MonoBehaviour
 		{
 			try
 			{
-				output = c.execute (args);
+				result = c.execute (args);
 			}
 			catch (Command.ExecutionException ee)
 			{
-				output = ee.Message;
+				result = ee.Message;
 				success = false;
 			}
 			#pragma warning disable 0168
 			catch (System.IndexOutOfRangeException ioore)
 			#pragma warning restore 0168
 			{
-				output = "Provided too few arguments.\n" + c.getHelp ();
+				result = "Provided too few arguments.\n" + c.getHelp ();
 				success = false;
 			}
 		}
 		else
 		{
-			output = "Command \"" + args[0] + "\" not found.  Try \"help\" for a list of commands";
+			result = "Command \"" + args[0] + "\" not found.  Try \"help\" for a list of commands";
 			success = false;
+		}
+
+		//send the output text to the appropriate available stream
+		if (success && stdOut != null)
+		{
+			stdOut (result);
+		}
+		else if(!success && stdErr != null)
+		{
+			stdErr (result);
 		}
 
 		return success;
 	}
 
-	// Print a message to the console
-	public void println(string message)
+	// This is for backwards-compatability and also ease-of use.
+	private string outputIntercept;
+	private void setOutputIntercept(string s) { outputIntercept = s; }
+	public bool execute(string command, out string result)
 	{
-		print (message + "\n");
+		setStdOut (setOutputIntercept);
+		setStdErr (setOutputIntercept);
+		bool success = execute (command);
+		result = outputIntercept;
+		resetStdOut ();
+		resetStdErr ();
+		return success;
 	}
-	public void println(string message, LogTag tag)
-	{
-		print (message + "\n", tag);
-	}
-	public void print(string message)
-	{
-		print (message, LogTag.none);
-	}
-	public void print(string message, LogTag tag)
-	{
-		output.text += tag.getFullTag() + " " + message;
 
-		if (output.cachedTextGenerator.lineCount > linesMax)
+	// Print a message to the console
+	public void println(string message, bool error = false)
+	{
+		if (error)
+			sendToErr (message);
+		else
+			sendToOut (message);
+	}
+	public void print(string message, bool error = false)
+	{
+		//TODO attempt to append to an existing message
+	}
+
+	// Send the passed text to this console's output pane
+	private void sendToOut(string msg)
+	{
+		GameObject messagePfb = Resources.Load<GameObject> ("UI/ConsoleMessage");
+
+		while (true)
 		{
-			string currOutput = output.text;
-			output.text = currOutput.Substring (output.cachedTextGenerator.lines [1].startCharIdx);
+			GameObject message = Instantiate (messagePfb, output);
+			Text box = message.GetComponent<Text> ();
+			//TODO message splitting is hard
+			break;
 		}
+	}
+
+	//Send the passed text to this console's error pane
+	private void sendToErr(string msg)
+	{
+		sendToOut (markWithColor (msg, Color.red));
+	}
+	private string markWithColor(string source, Color c)
+	{
+		string colorValue = "<color=#";
+		Vector4 colVals = (Vector4)c;
+		colorValue += ((int)(255f * colVals.x)).ToString ("x2");
+		colorValue += ((int)(255f * colVals.y)).ToString ("x2");
+		colorValue += ((int)(255f * colVals.z)).ToString ("x2");
+		colorValue += ((int)(255f * colVals.w)).ToString ("x2");
+		return colorValue + "><b>" + source + "</b></color>";
 	}
 
 	// Clear the console output window
 	public void clear()
 	{
-		output.text = "";
+		
 	}
 
-	/* Inner Classes */
-
-	// Used to tag output with appending strings and colors
-	public struct LogTag
+	// Clear the history buffer
+	public void clearHistory()
 	{
-		/* Basic pre-defined tags */
-		public static readonly LogTag none = new LogTag ("", Color.white);
-		public static readonly LogTag error = new LogTag ("[ERR]", Color.red);
-		public static readonly LogTag warning = new LogTag ("[WARN]", Color.yellow);
-		public static readonly LogTag info = new LogTag ("[INFO]", Color.green);
-
-		/* Static Methods */
-		public static LogTag buildConOut()
-		{
-			return new LogTag (GameManager.currentPath + " $", Color.cyan);
-		}
-
-		/* Instance Vars */
-		private string tagValue;
-		private Color tagColor;
-
-		public LogTag(string value, Color color)
-		{
-			tagValue = value;
-			tagColor = color;
-		}
-
-		public string getFullTag()
-		{
-			if (tagValue == "")
-				return tagValue;
-			string colorValue = "<color=#";
-			Vector4 colVals = (Vector4)tagColor;
-			colorValue += ((int)(255f * colVals.x)).ToString ("x2");
-			colorValue += ((int)(255f * colVals.y)).ToString ("x2");
-			colorValue += ((int)(255f * colVals.z)).ToString ("x2");
-			colorValue += ((int)(255f * colVals.w)).ToString ("x2");
-			return colorValue + "><b>" + tagValue + "</b></color>";
-		}
+		inHistory.Clear ();
 	}
 }
