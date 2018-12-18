@@ -23,7 +23,7 @@ public class TextArray
         }
     }
 
-    public void Insert(int index, string line) 
+    public void Insert(int index, Line line) 
     {
         int lastCount = 0;
         int currentCount = 0;
@@ -49,10 +49,10 @@ public class TextArray
         HandleSplit(entry);
     }
 
-    public void Append(string line) 
+    public void Append(Line line) 
     {
         int lastIndex = entries.Count - 1;
-        Debug.Log("Appending to entry index " + lastIndex);
+        //Debug.Log("Appending to entry index " + lastIndex);
         entries[lastIndex].Add(line);
 
 
@@ -73,7 +73,7 @@ public class TextArray
     }
 
     // TODO change me to use Lines instead of strings.
-    public class TextArrayEntry : List<string> {
+    public class TextArrayEntry : List<Line> {
 
         public const int MAX = 1 << 14;
         //public const int MAX = 128;
@@ -93,7 +93,7 @@ public class TextArray
                 int charCount = 0;
                 for (int i = 0; i < base.Count; i++) 
                 {
-                    charCount += this[i].Length;
+                    charCount += this[i].Contents.Length;
                 }
                 return charCount;
             }
@@ -126,22 +126,53 @@ public class TextArray
                 return null;
             }
 
-            // The midpoint is (roughly) the index where CharCount(0 ... midpoint) == CharCount(midpoint + 1 ... Count).
-            //int midpoint = Count / 2;
-            int midpoint = 0;
-
-            TextArrayEntry newList = new TextArrayEntry();
-            for (int i = midpoint; i < Count; i++)
+            // Find the middle logical line.
+            int estimatedMidpoint = CharCount / 2;
+            int currentMidpoint = 0;
+            Line middleLine = null;
+            int middleIndex = 0;
+            for (int i = 0; i < this.Count; i++) 
             {
-                newList.Add(this[i]);
-                //this.Remove(this[i]);
+                if (estimatedMidpoint >= currentMidpoint && estimatedMidpoint < currentMidpoint + this[i].Length)
+                {
+                    // Middle string is the current one
+                    middleLine = this[i];
+                    middleIndex = i;
+                    break;
+                }
+                currentMidpoint += this[i].Length;
             }
 
-            this.RemoveRange(midpoint, Count - midpoint);
+            // Split the logical line.
+            int splitIndex = estimatedMidpoint - currentMidpoint;
+            Line afterMiddleLine = middleLine.Split(splitIndex);
 
-            //Debug.Log("Is new list null?: " + newList == null);
-            //this.RemoveRange(midpoint, Count - midpoint);
-            //TextArrayEntry newThis = GetRange(0, midpoint) as TextArrayEntry;
+            // Create the split list. Add the second half of the split line to it
+            // first, then add every line after that. Note that the first half of
+            // the split line is index "middleIndex", so we start 1 higher.
+            TextArrayEntry newList = new TextArrayEntry();
+
+            // If the second half of the split line was empty, then don't add it.
+            if (!afterMiddleLine.Contents.Equals(""))
+            {
+                newList.Add(afterMiddleLine);
+            }
+
+            for (int i = middleIndex + 1; i < Count; i++) 
+            {
+                newList.Add(this[i]);
+            }
+
+            // Remove all the lines we added to the split. 
+            // If the first half of the split line was empty, don't include it.
+            if (middleLine.Contents.Equals(""))
+            {
+                this.RemoveRange(middleIndex, Count - middleIndex);
+            }
+            else
+            {
+                this.RemoveRange(middleIndex + 1, Count - middleIndex - 1);
+            }
 
             return newList;
         }
