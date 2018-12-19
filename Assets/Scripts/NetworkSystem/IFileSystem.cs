@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using FileSystemNS;
 
-/**
- * An interface allowing nodes to support FileSystem operations.
- */
+/// <summary>
+/// An interface allowing nodes to support FileSystem operations.
+/// </summary>
 public interface IFileSystem {
-	// Assert that classes implementing this have a FileSystem instance.
+    // Assert that classes implementing this have a FileSystem instance.
 
-	FileSystem fileSystem { get; }
+    FileSystem fileSystem { get; }
 }

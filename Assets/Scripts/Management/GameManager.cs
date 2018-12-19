@@ -33,8 +33,6 @@ public class GameManager : MonoBehaviour {
 
 		currentHost = desk1;
 
-		GenerateTexture.renderTexture ("test");
-
 		//currentLevel = Network.getLevel1 ();
 		//currentHost = currentLevel.getStart ();
 	}
