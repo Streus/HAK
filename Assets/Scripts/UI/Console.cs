@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Reflection;
 using UnityEngine.UI;
 using System.IO;
+using TMPro;
 
 public class Console : MonoBehaviour
 {
@@ -12,15 +13,24 @@ public class Console : MonoBehaviour
 
 	private static Assembly assembly = Assembly.GetExecutingAssembly();
 
-	/* Instance Vars */
+    /* Instance Vars */
 
-	// The input line for the Console
-	[SerializeField]
+    /// <summary>
+    /// How wide should the console try to be, in characters?
+    /// </summary>
+    [SerializeField]
+    [Range(20, 120)]
+    public int MaxLineWidth = 80;
+    private int lastLineWidth = 80;
+
+    // The input line for the Console
+    [SerializeField]
 	private InputField input;
 
 	// The output display for the Console
 	[SerializeField]
-	private Text output;
+	//private Text output;
+    private TextMeshProUGUI output;
 
 	// The base RectTransform of the Console
 	[SerializeField]
@@ -80,8 +90,8 @@ public class Console : MonoBehaviour
 		get { return input.isFocused; }
 	}
 
-	/* Instance Methods */
-	public void Awake()
+    /* Instance Methods */
+    public void Awake()
 	{
 		if (log == null) 
 		{
@@ -94,11 +104,33 @@ public class Console : MonoBehaviour
 			history = new List<string> ();
 			historyIndex = -1;
 
-			new CSEREnvironment (); //DEBUG
+            // Make the font size fit the screen.
+
+            //float lineWidthInPixels = GetWidthOfString(new string(' ', 80));
+            //float screenWidthInPixels = Screen.width / 2f;
+            //float scale = screenWidthInPixels / lineWidthInPixels;
+
+            UpdateFontSize();
+
+            //output.maxVisibleCharacters = 80;
+
+            //Debug.Log("Screen width: " + screenWidthInPixels + " Line width: " + lineWidthInPixels);
+            //output.fontSize *= scale;
+
+            new CSEREnvironment (); //DEBUG
 		}
 		else
 			Destroy (transform.root.gameObject);
 	}
+
+    private void UpdateFontSize() 
+    {
+        // Experimentally derived function. 
+        // I measured the largest possible font size for a given line width, and 
+        // found this function fit almost exactly. 
+        output.fontSize = 695f / MaxLineWidth;
+    }
+
 	private void buildCommandList()
 	{
 		string baseDir = System.IO.Directory.GetCurrentDirectory ();
@@ -132,6 +164,12 @@ public class Console : MonoBehaviour
 	{
 		if (!_enabled)
 			return;
+
+        if (MaxLineWidth != lastLineWidth) 
+        {
+            lastLineWidth = MaxLineWidth;
+            UpdateFontSize();
+        }
 
 		if (!isFocused && (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.DownArrow) || Input.GetKeyDown (KeyCode.UpArrow)))
 		{
@@ -236,23 +274,30 @@ public class Console : MonoBehaviour
 	{
 		print (message + "\n");
 	}
+
 	public void println(string message, LogTag tag)
 	{
 		print (message + "\n", tag);
 	}
+
 	public void print(string message)
 	{
 		print (message, LogTag.none);
 	}
+
 	public void print(string message, LogTag tag)
 	{
-		output.text += tag.getFullTag() + " " + message;
+        //output.text += tag.getFullTag() + " " + message;
+        //output.SetText(output.text + tag.getFullTag() + " " + message);
+        output.text += tag.getFullTag() + " " + message;
+        output.ForceMeshUpdate();
 
-		if (output.cachedTextGenerator.lineCount > linesMax)
-		{
-			string currOutput = output.text;
-			output.text = currOutput.Substring (output.cachedTextGenerator.lines [1].startCharIdx);
-		}
+		//if (output.cachedTextGenerator.lineCount > linesMax)
+		//{
+		//	string currOutput = output.text;
+		//	output.text = currOutput.Substring (output.cachedTextGenerator.lines [1].startCharIdx);
+		//}
+
 	}
 
 	// Clear the console output window
