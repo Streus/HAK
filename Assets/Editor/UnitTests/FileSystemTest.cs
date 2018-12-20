@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NUnit.Framework;
+using FileSystemNS;
 
 [TestFixture]
 public class FileSystemTest {
