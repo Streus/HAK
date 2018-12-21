@@ -11,8 +11,8 @@ namespace FileSystemNS
     {
 
         // The only valid filenames are "([0-9][a-z][A-Z]-_)*"
-        private static Regex validNameRegex = new Regex(@"(\w?-?_?)+");
-        private static string[] validFileExtensions = { "txt", "src" };
+        private static readonly Regex validNameRegex = new Regex(@"(\w?-?_?)+");
+        private static readonly string[] validFileExtensions = { "txt", "src" };
 
         public readonly Directory root;
 
@@ -24,7 +24,7 @@ namespace FileSystemNS
             root = new Directory(this, null, "");
 
             //TODO: should this be publicly visible? readonly?
-            User rootUser = new User("root", "", SecurityLevel.ROOT);
+            User rootUser = new User("root", "", SecurityLevel.Root);
             allUsers = new List<User>() { rootUser };
             currentUser = rootUser;
         }
@@ -259,7 +259,7 @@ namespace FileSystemNS
          */
         public void addUser(string username, string password, SecurityLevel level)
         {
-            if (level == SecurityLevel.ROOT)
+            if (level == SecurityLevel.Root)
             {
                 throw new InvalidUserException("Only one root user can exist.");
             }
@@ -315,21 +315,21 @@ namespace FileSystemNS
             }
 
             // Non-admins can only change non-admin permissions.
-            if (this.currentUser.adminLevel == SecurityLevel.NONADMIN && (oldR == newR) && (oldA == newA))
+            if (this.currentUser.adminLevel == SecurityLevel.Nonadmin && (oldR == newR) && (oldA == newA))
             {
                 fi.setPermissions(to);
                 return;
             }
 
             // Admins can change non-admin and admin permissions.
-            if (this.currentUser.adminLevel == SecurityLevel.ADMIN && (oldR == newR))
+            if (this.currentUser.adminLevel == SecurityLevel.Admin && (oldR == newR))
             {
                 fi.setPermissions(to);
                 return;
             }
 
             // The root user can change anything.
-            if (this.currentUser.adminLevel == SecurityLevel.ROOT)
+            if (this.currentUser.adminLevel == SecurityLevel.Root)
             {
                 fi.setPermissions(to);
                 return;

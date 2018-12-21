@@ -21,7 +21,7 @@ namespace FileSystemNS
 
         public string getContents()
         {
-            if (!filesystem.currentUser.canRead(this.permissions))
+            if (!filesystem.currentUser.CanRead(this.permissions))
             {
                 throw new InvalidUserException("Cannot read file: insufficient permissions. (requires read)");
             }
@@ -30,7 +30,7 @@ namespace FileSystemNS
 
         public void setContents(string contents)
         {
-            if (!filesystem.currentUser.canWrite(this.permissions))
+            if (!filesystem.currentUser.CanWrite(this.permissions))
             {
                 throw new InvalidUserException("Cannot write to file: insufficient permissions. (requires write)");
             }
