@@ -2,30 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NUnit.Framework;
+using FileSystemNS;
 
 [TestFixture]
-public class FileSystemUserTest {
+public class FileSystemUserTest 
+{
+
 	[Test]
 	public void CanAddUsers() {
 		FileSystem fs = new FileSystem ();
 		Assert.AreEqual (1, fs.allUsers.Count);
 
-		fs.addUser ("test", "pass", SECURITY_LEVEL.ADMIN);
+		fs.addUser ("test", "pass", SecurityLevel.ADMIN);
 		Assert.AreEqual (2, fs.allUsers.Count);
 
 		fs.changeUser ("test", "pass");
 
 		// Should not be able to add two users with the same name
 		Assert.Throws (typeof(InvalidUserException), delegate {
-			fs.addUser("test", "pass2", SECURITY_LEVEL.ADMIN);
+			fs.addUser("test", "pass2", SecurityLevel.ADMIN);
 		});
 		Assert.Throws (typeof(InvalidUserException), delegate {
-			fs.addUser("test", "pass2", SECURITY_LEVEL.NONADMIN);
+			fs.addUser("test", "pass2", SecurityLevel.NONADMIN);
 		});
 
 		// Should not be able to add a second root user
 		Assert.Throws (typeof(InvalidUserException), delegate {
-			fs.addUser("superroot", "pass", SECURITY_LEVEL.ROOT);
+			fs.addUser("superroot", "pass", SecurityLevel.ROOT);
 		});
 	}
 
@@ -34,7 +37,7 @@ public class FileSystemUserTest {
 		FileSystem fs = new FileSystem ();
 		Assert.AreEqual (1, fs.allUsers.Count);
 
-		fs.addUser ("test", "pass", SECURITY_LEVEL.ADMIN);
+		fs.addUser ("test", "pass", SecurityLevel.ADMIN);
 		Assert.AreEqual (2, fs.allUsers.Count);
 
 		// Should throw exception if failed to sign in
@@ -53,7 +56,7 @@ public class FileSystemUserTest {
 		// Should result in changed user
 		fs.changeUser ("test", "pass");
 		Assert.AreEqual ("test", fs.currentUser.username);
-		Assert.AreEqual (SECURITY_LEVEL.ADMIN, fs.currentUser.adminLevel);
+		Assert.AreEqual (SecurityLevel.ADMIN, fs.currentUser.adminLevel);
 	}
 
 	[Test]
@@ -99,7 +102,7 @@ public class FileSystemUserTest {
 		fs.setPermissions (fi, 700);
 
 		// Make an admin user
-		fs.addUser ("test", "pass", SECURITY_LEVEL.ADMIN);
+        fs.addUser ("test", "pass", SecurityLevel.ADMIN);
 		Assert.AreEqual (2, fs.allUsers.Count);
 		fs.changeUser ("test", "pass");
 
@@ -136,7 +139,7 @@ public class FileSystemUserTest {
 		fs.setPermissions (fi, 000);
 
 		// Make a nonadmin user
-		fs.addUser("meow", "pass", SECURITY_LEVEL.NONADMIN);
+		fs.addUser("meow", "pass", SecurityLevel.NONADMIN);
 		Assert.AreEqual (2, fs.allUsers.Count);
 		fs.changeUser ("meow", "pass");
 
