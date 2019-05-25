@@ -13,22 +13,37 @@ public class FileSystemUserTest
 		FileSystem fs = new FileSystem ();
 		Assert.AreEqual (1, fs.allUsers.Count);
 
+<<<<<<< HEAD
 		fs.addUser ("test", "pass", SecurityLevel.ADMIN);
+=======
+        fs.addUser ("test", "pass", SecurityLevel.Admin);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		Assert.AreEqual (2, fs.allUsers.Count);
 
 		fs.changeUser ("test", "pass");
 
 		// Should not be able to add two users with the same name
 		Assert.Throws (typeof(InvalidUserException), delegate {
+<<<<<<< HEAD
 			fs.addUser("test", "pass2", SecurityLevel.ADMIN);
 		});
 		Assert.Throws (typeof(InvalidUserException), delegate {
 			fs.addUser("test", "pass2", SecurityLevel.NONADMIN);
+=======
+			fs.addUser("test", "pass2", SecurityLevel.Admin);
+		});
+		Assert.Throws (typeof(InvalidUserException), delegate {
+			fs.addUser("test", "pass2", SecurityLevel.Nonadmin);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		});
 
 		// Should not be able to add a second root user
 		Assert.Throws (typeof(InvalidUserException), delegate {
+<<<<<<< HEAD
 			fs.addUser("superroot", "pass", SecurityLevel.ROOT);
+=======
+			fs.addUser("superroot", "pass", SecurityLevel.Root);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		});
 	}
 
@@ -37,7 +52,11 @@ public class FileSystemUserTest
 		FileSystem fs = new FileSystem ();
 		Assert.AreEqual (1, fs.allUsers.Count);
 
+<<<<<<< HEAD
 		fs.addUser ("test", "pass", SecurityLevel.ADMIN);
+=======
+		fs.addUser ("test", "pass", SecurityLevel.Admin);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		Assert.AreEqual (2, fs.allUsers.Count);
 
 		// Should throw exception if failed to sign in
@@ -56,7 +75,11 @@ public class FileSystemUserTest
 		// Should result in changed user
 		fs.changeUser ("test", "pass");
 		Assert.AreEqual ("test", fs.currentUser.username);
+<<<<<<< HEAD
 		Assert.AreEqual (SecurityLevel.ADMIN, fs.currentUser.adminLevel);
+=======
+		Assert.AreEqual (SecurityLevel.Admin, fs.currentUser.adminLevel);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 	}
 
 	[Test]
@@ -102,7 +125,11 @@ public class FileSystemUserTest
 		fs.setPermissions (fi, 700);
 
 		// Make an admin user
+<<<<<<< HEAD
         fs.addUser ("test", "pass", SecurityLevel.ADMIN);
+=======
+		fs.addUser ("test", "pass", SecurityLevel.Admin);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		Assert.AreEqual (2, fs.allUsers.Count);
 		fs.changeUser ("test", "pass");
 
@@ -139,7 +166,11 @@ public class FileSystemUserTest
 		fs.setPermissions (fi, 000);
 
 		// Make a nonadmin user
+<<<<<<< HEAD
 		fs.addUser("meow", "pass", SecurityLevel.NONADMIN);
+=======
+		fs.addUser("meow", "pass", SecurityLevel.Nonadmin);
+>>>>>>> f8ade7209b69b532a52f808012fae73b6c4782d1
 		Assert.AreEqual (2, fs.allUsers.Count);
 		fs.changeUser ("meow", "pass");
 

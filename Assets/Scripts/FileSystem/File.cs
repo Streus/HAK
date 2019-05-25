@@ -98,7 +98,7 @@ namespace FileSystemNS
                 throw new InvalidFileException("Cannot delete root file.");
             }
 
-            if (!filesystem.currentUser.canWrite(this.permissions))
+            if (!filesystem.currentUser.CanWrite(this.permissions))
             {
                 throw new InvalidUserException("Cannot delete file: insufficient permissions. (requires write)");
             }

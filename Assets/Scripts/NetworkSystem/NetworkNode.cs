@@ -119,23 +119,21 @@ public abstract class NetworkNode
             {
                 return 1;
             }
-            else
+
+            if (!seen.ContainsKey(n))
             {
-                if (!(seen.ContainsKey(n)))
+                Dictionary<NetworkNode, int> newSeen = new Dictionary<NetworkNode, int>(seen);
+                newSeen.Add(n, 0);
+                long pingVal = 1 + n.pingRecur(ipOrHostname, newSeen);
+                if (pingVal > 0)
                 {
-                    Dictionary<NetworkNode, int> newSeen = new Dictionary<NetworkNode, int>(seen);
-                    newSeen.Add(n, 0);
-                    long pingVal = 1 + n.pingRecur(ipOrHostname, newSeen);
-                    if (pingVal > 0)
+                    if (minVal == -1)
                     {
-                        if (minVal == -1)
-                        {
-                            minVal = pingVal;
-                        }
-                        else if (pingVal < minVal)
-                        {
-                            minVal = pingVal;
-                        }
+                        minVal = pingVal;
+                    }
+                    else if (pingVal < minVal)
+                    {
+                        minVal = pingVal;
                     }
                 }
             }
@@ -147,11 +145,6 @@ public abstract class NetworkNode
 	 * Like ping, but returns a NetworkNode if it can be reached, or null if not.
 	 */
     public NetworkNode search(string ipOrHostname)
-    {
-        return searchRecur(ipOrHostname, new Dictionary<NetworkNode, int>() { { this, 0 } });
-    }
-
-    public NetworkNode searchRecur(string ipOrHostname, Dictionary<NetworkNode, int> seen)
     {
         if (!this.active)
         {
@@ -168,6 +161,11 @@ public abstract class NetworkNode
             return this;
         }
 
+        return searchRecur(ipOrHostname, new HashSet<NetworkNode>() { { this } });
+    }
+
+    public NetworkNode searchRecur(string ipOrHostname, HashSet<NetworkNode> seen)
+    {
         foreach (NetworkNode n in connections)
         {
             if (!n.active)
@@ -179,20 +177,18 @@ public abstract class NetworkNode
             {
                 return n;
             }
-            else
+
+            if (!seen.Contains(n))
             {
-                if (!(seen.ContainsKey(n)))
+                seen.Add(n);
+                NetworkNode found = n.searchRecur(ipOrHostname, seen);
+                if (found != null)
                 {
-                    Dictionary<NetworkNode, int> newSeen = new Dictionary<NetworkNode, int>(seen);
-                    newSeen.Add(n, 0);
-                    NetworkNode found = n.searchRecur(ipOrHostname, newSeen);
-                    if (found != null)
-                    {
-                        return found;
-                    }
+                    return found;
                 }
             }
         }
+
         return null;
     }
 }

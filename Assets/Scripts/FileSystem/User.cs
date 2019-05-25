@@ -6,9 +6,9 @@ namespace FileSystemNS
 {
     public enum SecurityLevel
     {
-        ROOT = 0,
-        ADMIN,
-        NONADMIN
+        Root = 0,
+        Admin,
+        Nonadmin
     }
 
     /// <summary>
@@ -23,9 +23,9 @@ namespace FileSystemNS
 
         public User(string user, string pass, SecurityLevel level)
         {
-            this.username = user;
-            this.password = pass;
-            this.adminLevel = level;
+            username = user;
+            password = pass;
+            adminLevel = level;
         }
 
         /**
@@ -45,42 +45,46 @@ namespace FileSystemNS
             }
         }
 
-        public bool canRead(int permissions)
+        public bool CanRead(int permissions)
         {
             int R = permissions / 100;
             int A = (permissions / 10) % 10;
             int N = permissions % 10;
 
-            if (adminLevel == SecurityLevel.ROOT && ((R & 4) == 4))
+            if (adminLevel == SecurityLevel.Root && ((R & 4) == 4))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.ADMIN && ((A & 4) == 4))
+            
+            if (adminLevel == SecurityLevel.Admin && ((A & 4) == 4))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.NONADMIN && ((N & 4) == 4))
+            
+            if (adminLevel == SecurityLevel.Nonadmin && ((N & 4) == 4))
             {
                 return true;
             }
             return false;
         }
 
-        public bool canWrite(int permissions)
+        public bool CanWrite(int permissions)
         {
             int R = permissions / 100;
             int A = (permissions / 10) % 10;
             int N = permissions % 10;
 
-            if (adminLevel == SecurityLevel.ROOT && ((R & 2) == 2))
+            if (adminLevel == SecurityLevel.Root && ((R & 2) == 2))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.ADMIN && ((A & 2) == 2))
+            
+            if (adminLevel == SecurityLevel.Admin && ((A & 2) == 2))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.NONADMIN && ((N & 2) == 2))
+            
+            if (adminLevel == SecurityLevel.Nonadmin && ((N & 2) == 2))
             {
                 return true;
             }
@@ -94,15 +98,17 @@ namespace FileSystemNS
             int A = (permissions / 10) % 10;
             int N = permissions % 10;
 
-            if (adminLevel == SecurityLevel.ROOT && ((R & 1) == 1))
+            if (adminLevel == SecurityLevel.Root && ((R & 1) == 1))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.ADMIN && ((A & 1) == 1))
+            
+            if (adminLevel == SecurityLevel.Admin && ((A & 1) == 1))
             {
                 return true;
             }
-            else if (adminLevel == SecurityLevel.NONADMIN && ((N & 1) == 1))
+            
+            if (adminLevel == SecurityLevel.Nonadmin && ((N & 1) == 1))
             {
                 return true;
             }
